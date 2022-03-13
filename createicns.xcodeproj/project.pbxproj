@@ -51,7 +51,7 @@
 		71CEA00B27DDA16600E747B8 = {
 			isa = PBXGroup;
 			children = (
-				71CEA01627DDA16600E747B8 /* createicns */,
+				71CEA01627DDA16600E747B8 /* Sources */,
 				71CEA01527DDA16600E747B8 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -64,7 +64,7 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		71CEA01627DDA16600E747B8 /* createicns */ = {
+		71CEA01627DDA16600E747B8 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
 				71CEA02427DDA1CA00E747B8 /* Create.swift */,
@@ -72,7 +72,7 @@
 				71CEA02627DDA1CF00E747B8 /* IconSet.swift */,
 				71CEA02827DDA1D300E747B8 /* IconUtil.swift */,
 			);
-			path = createicns;
+			path = Sources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
