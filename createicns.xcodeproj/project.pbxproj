@@ -7,7 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		71CEA01827DDA16600E747B8 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71CEA01727DDA16600E747B8 /* main.swift */; };
+		71CEA02027DDA18D00E747B8 /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = 71CEA01F27DDA18D00E747B8 /* ArgumentParser */; };
+		71CEA02327DDA1BB00E747B8 /* Prism in Frameworks */ = {isa = PBXBuildFile; productRef = 71CEA02227DDA1BB00E747B8 /* Prism */; };
+		71CEA02527DDA1CA00E747B8 /* Create.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71CEA02427DDA1CA00E747B8 /* Create.swift */; };
+		71CEA02727DDA1CF00E747B8 /* IconSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71CEA02627DDA1CF00E747B8 /* IconSet.swift */; };
+		71CEA02927DDA1D300E747B8 /* IconUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71CEA02827DDA1D300E747B8 /* IconUtil.swift */; };
+		71CEA02B27DDA1D800E747B8 /* CreationError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71CEA02A27DDA1D800E747B8 /* CreationError.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -24,7 +29,10 @@
 
 /* Begin PBXFileReference section */
 		71CEA01427DDA16600E747B8 /* createicns */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = createicns; sourceTree = BUILT_PRODUCTS_DIR; };
-		71CEA01727DDA16600E747B8 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		71CEA02427DDA1CA00E747B8 /* Create.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Create.swift; sourceTree = "<group>"; };
+		71CEA02627DDA1CF00E747B8 /* IconSet.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IconSet.swift; sourceTree = "<group>"; };
+		71CEA02827DDA1D300E747B8 /* IconUtil.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IconUtil.swift; sourceTree = "<group>"; };
+		71CEA02A27DDA1D800E747B8 /* CreationError.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CreationError.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -32,6 +40,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				71CEA02327DDA1BB00E747B8 /* Prism in Frameworks */,
+				71CEA02027DDA18D00E747B8 /* ArgumentParser in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -57,7 +67,10 @@
 		71CEA01627DDA16600E747B8 /* createicns */ = {
 			isa = PBXGroup;
 			children = (
-				71CEA01727DDA16600E747B8 /* main.swift */,
+				71CEA02427DDA1CA00E747B8 /* Create.swift */,
+				71CEA02A27DDA1D800E747B8 /* CreationError.swift */,
+				71CEA02627DDA1CF00E747B8 /* IconSet.swift */,
+				71CEA02827DDA1D300E747B8 /* IconUtil.swift */,
 			);
 			path = createicns;
 			sourceTree = "<group>";
@@ -78,6 +91,10 @@
 			dependencies = (
 			);
 			name = createicns;
+			packageProductDependencies = (
+				71CEA01F27DDA18D00E747B8 /* ArgumentParser */,
+				71CEA02227DDA1BB00E747B8 /* Prism */,
+			);
 			productName = createicns;
 			productReference = 71CEA01427DDA16600E747B8 /* createicns */;
 			productType = "com.apple.product-type.tool";
@@ -106,6 +123,10 @@
 				Base,
 			);
 			mainGroup = 71CEA00B27DDA16600E747B8;
+			packageReferences = (
+				71CEA01E27DDA18D00E747B8 /* XCRemoteSwiftPackageReference "swift-argument-parser" */,
+				71CEA02127DDA1BB00E747B8 /* XCRemoteSwiftPackageReference "Prism" */,
+			);
 			productRefGroup = 71CEA01527DDA16600E747B8 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -120,7 +141,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				71CEA01827DDA16600E747B8 /* main.swift in Sources */,
+				71CEA02927DDA1D300E747B8 /* IconUtil.swift in Sources */,
+				71CEA02B27DDA1D800E747B8 /* CreationError.swift in Sources */,
+				71CEA02727DDA1CF00E747B8 /* IconSet.swift in Sources */,
+				71CEA02527DDA1CA00E747B8 /* Create.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -177,7 +201,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 12.2;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -231,7 +255,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 12.2;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
@@ -284,6 +308,38 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		71CEA01E27DDA18D00E747B8 /* XCRemoteSwiftPackageReference "swift-argument-parser" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-argument-parser.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
+		71CEA02127DDA1BB00E747B8 /* XCRemoteSwiftPackageReference "Prism" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/jordanbaird/Prism";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		71CEA01F27DDA18D00E747B8 /* ArgumentParser */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 71CEA01E27DDA18D00E747B8 /* XCRemoteSwiftPackageReference "swift-argument-parser" */;
+			productName = ArgumentParser;
+		};
+		71CEA02227DDA1BB00E747B8 /* Prism */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 71CEA02127DDA1BB00E747B8 /* XCRemoteSwiftPackageReference "Prism" */;
+			productName = Prism;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 71CEA00C27DDA16600E747B8 /* Project object */;
 }
