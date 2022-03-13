@@ -12,19 +12,19 @@ import Foundation
 class IconUtil {
   private let path = "/usr/bin/iconutil"
   
-  let iconSetURL: URL
+  let iconSet: IconSet
   
-  var iconURL: URL? {
-    _iconURL
+  init(iconSet: IconSet) {
+    self.iconSet = iconSet
   }
   
-  private var _iconURL: URL?
-  
-  init(iconSet url: URL) {
-    iconSetURL = url
-  }
-  
-  func run() throws {
+  func run(writingTo output: URL) throws {
+    let tempURL = try createTemp(for: output)
+    let iconSetURL = tempURL.appendingPathComponent("icon.iconset")
+    let iconURL = tempURL.appendingPathComponent("icon.icns")
+    
+    try iconSet.write(to: iconSetURL)
+    
     let process = Process()
     let pipe = Pipe()
     
@@ -34,15 +34,15 @@ class IconUtil {
     
     if #available(macOS 10.13, *) {
       process.executableURL = URL(fileURLWithPath: path)
-      process.currentDirectoryURL = iconSetURL.deletingLastPathComponent()
+      process.currentDirectoryURL = tempURL
       do {
         try process.run()
       } catch {
-        throw CreationError("Could not execute icon creation process.")
+        throw CreationError(error.localizedDescription)
       }
     } else {
       process.launchPath = path
-      process.currentDirectoryPath = iconSetURL.deletingLastPathComponent().path
+      process.currentDirectoryPath = tempURL.path
       process.launch()
     }
     process.waitUntilExit()
@@ -62,8 +62,24 @@ class IconUtil {
       throw CreationError(.init(data: data, encoding: .utf8)!)
     }
     
-    _iconURL = iconSetURL
-      .deletingPathExtension()
-      .appendingPathExtension("icns")
+    // Copying the item seems to be faster than moving it. It doesn't matter
+    // either way, as the entire temp directory is removed in the next line.
+    try FileManager.default.copyItem(
+      at: iconURL,
+      to: output)
+    
+    try FileManager.default.removeItem(at: tempURL)
+  }
+  
+  private func createTemp(for output: URL) throws -> URL {
+    do {
+      return try FileManager.default.url(
+        for: .itemReplacementDirectory,
+        in: .userDomainMask,
+        appropriateFor: output,
+        create: true)
+    } catch {
+      throw CreationError(error.localizedDescription)
+    }
   }
 }

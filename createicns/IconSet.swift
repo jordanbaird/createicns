@@ -10,9 +10,11 @@ import Cocoa
 
 /// Represents an 'iconset' file.
 struct IconSet {
-  typealias ImageDimensions = (width: CGFloat, height: CGFloat, name: String)
+  typealias IconDimensions = (width: CGFloat, height: CGFloat, stringRepresentation: String)
   
-  private let dimensions: [ImageDimensions] = [
+  typealias Icon = (data: Data, name: String)
+  
+  private let dimensions: [IconDimensions] = [
     (16,   16,   "16x16"),
     (32,   32,   "16x16@2x"),
     (32,   32,   "32x32"),
@@ -25,64 +27,71 @@ struct IconSet {
     (1024, 1024, "512x512@2x")
   ]
   
+  var icons: [Icon] { _icons }
+  
+  private var _icons = [Icon]()
+  
   let image: NSImage
   
-  let url: URL
-  
-  init(image: NSImage, url: URL) {
+  init(image: NSImage) throws {
     self.image = image
-    self.url = url
+    _icons = try dimensions.map {
+      try createImageFile(
+        from: image,
+        size: .init(width: $0.width, height: $0.height),
+        name: $0.stringRepresentation)
+    }
   }
   
-  func write() throws {
-    try _write(url)
+  private func createImageFile(
+    from image: NSImage,
+    size: NSSize,
+    name: String
+  ) throws -> Icon {
+    let size = NSSize(
+      width: size.width / 2,
+      height: size.height / 2)
+    
+    let newImage = NSImage(size: size)
+    
+    newImage.lockFocus()
+    image.draw(
+      in: .init(origin: .zero, size: size),
+      from: .init(origin: .zero, size: image.size),
+      operation: .sourceOver,
+      fraction: 1)
+    newImage.unlockFocus()
+    
+    let rep = NSBitmapImageRep(data: newImage.tiffRepresentation!)
+    guard let pngData = rep?.representation(
+      using: .png,
+      properties: [:])
+    else {
+      throw CreationError("Could not create png data for iconset.")
+    }
+    return Icon(data: pngData, name: name)
   }
   
   func write(to url: URL) throws {
-    try _write(url)
-  }
-  
-  private func _write(_ url: URL) throws {
-    try FileManager.default.createDirectory(
-      at: url,
-      withIntermediateDirectories: true)
-    
-    for dimension in dimensions {
-      try createImageFile(
-        from: image,
-        size: .init(width: dimension.width, height: dimension.height),
-        output: url.appendingPathComponent("icon" + dimension.name + ".png"))
+    do {
+      try FileManager.default.createDirectory(
+        at: url,
+        withIntermediateDirectories: true)
+    } catch {
+      throw CreationError(error.localizedDescription)
     }
-    
-    func createImageFile(from image: NSImage, size: NSSize, output: URL) throws {
-      let size = NSSize(width: size.width / 2, height: size.height / 2)
-      let newImage = NSImage(size: size)
-      
-      newImage.lockFocus()
-      image.draw(
-        in: .init(origin: .zero, size: size),
-        from: .init(origin: .zero, size: image.size),
-        operation: .sourceOver,
-        fraction: 1)
-      newImage.unlockFocus()
-      
-      let rep = NSBitmapImageRep(data: newImage.tiffRepresentation!)
-      guard let pngData = rep?.representation(using: .png, properties: [:]) else {
-        throw CreationError("Could not create png data for iconset.")
+    for icon in icons {
+      do {
+        try icon.data.write(
+          to: url.appendingPathComponent(
+            "icon_" + icon.name + ".png"))
+      } catch {
+        throw CreationError(error.localizedDescription)
       }
-      try pngData.write(to: output)
     }
   }
   
-  func remove() throws {
-    try _remove(url)
-  }
-  
-  func remove(at url: URL) throws {
-    try _remove(url)
-  }
-  
-  private func _remove(_ url: URL) throws {
-    try FileManager.default.removeItem(at: url)
+  func remove(at url: URL) {
+    try? FileManager.default.removeItem(at: url)
   }
 }

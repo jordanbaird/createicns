@@ -12,98 +12,102 @@ import Prism
 
 @main
 struct Create: ParsableCommand {
-  @Argument(
-    help: """
-      An image file from which to create an icon. \
-      This must be a square image.
-      """)
+  static var configuration: CommandConfiguration = {
+    var configuration = CommandConfiguration()
+    configuration.commandName = "createicns"
+    return configuration
+  }()
+  
+  @Argument(help: """
+    An image file from which to create an icon. The image's width and height \
+    must be equal.
+    
+    """)
   var input: String
   
-  @Argument(
-    help: """
-      The output path of the icon. The path must have the icns extension. If \
-      no output is provided, the icon will be saved in the same directory as \
-      the input.
-      """)
+  @Argument(help: """
+    The output path of the icon. The path must have the 'icns' file extension. \
+    If no output is provided, the icon will be saved in the same parent directory \
+    as the input.
+    
+    """)
   var output: String?
   
+  @Flag(name: [.customShort("s"), .customLong("iconset")], help: """
+    Convert the input into an iconset file instead of icns. If this option is \
+    provided, the output path must have the 'iconset' extension instead of 'icns'.
+    
+    """)
+  var convertToIconSet = false
+  
   func run() throws {
-    // If no output was provided, use the input.
-    let output: String = {
-      if let output = self.output {
-        return output
+    let output = getCorrectOutput()
+    
+    guard !FileManager.default.fileExists(atPath: output.path) else {
+      throw CreationError("File '\(output.path)' already exists.")
+    }
+    
+    if convertToIconSet {
+      print("Creating iconset...")
+    } else {
+      print("Creating icon...")
+    }
+    
+    let iconSet = try IconSet(image: try getImage(from: input))
+    
+    var successMessage: String
+    
+    if convertToIconSet {
+      guard output.pathExtension == "iconset" else {
+        throw CreationError("Output path must have '.iconset' extension.")
       }
-      
-      // Replace the input extension with the 'icns' extension.
-      return URL(fileURLWithPath: input)
-        .deletingPathExtension()
-        .appendingPathExtension("icns")
-        .path
-    }()
-    
-    guard URL(fileURLWithPath: output).pathExtension == "icns" else {
-      throw CreationError("Output path must have icns extension.")
+      try iconSet.write(to: output)
+      successMessage = "Iconset successfully created."
+    } else {
+      guard output.pathExtension == "icns" else {
+        throw CreationError("Output path must have '.icns' extension.")
+      }
+      let iconUtil = IconUtil(iconSet: iconSet)
+      try iconUtil.run(writingTo: output)
+      successMessage = "Icon successfully created."
     }
     
-    guard !FileManager.default.fileExists(atPath: output) else {
-      throw CreationError("File '\(output)' already exists.")
-    }
-    
-    print("Creating icon...")
-    
-    let tempURL = URL(fileURLWithPath: NSTemporaryDirectory())
-      .appendingPathComponent("icon.iconset")
-    
-    let image = try getImage(from: input)
-    
-    let iconSet = IconSet(image: image, url: tempURL)
-    try iconSet.write()
-    
-    let iconUtil = IconUtil(iconSet: tempURL)
-    try iconUtil.run()
-    
-    // Copying the item seems to be faster than moving it, so use that.
-    // Force-unwraps are safe here, as 'run()' has been called.
-    try FileManager.default.copyItem(
-      at: iconUtil.iconURL!,
-      to: .init(fileURLWithPath: output))
-    try FileManager.default.removeItem(at: iconUtil.iconURL!)
-    try iconSet.remove()
-    
-    print("Icon successfully created.".ansiGreen)
+    print(successMessage.ansiGreen)
   }
 }
 
 extension Create {
-  func isDirectory(_ url: URL) -> Bool {
-    guard
-      let resourceValues = try? url.resourceValues(
-        forKeys: [.isDirectoryKey]),
-      let isDirectory = resourceValues.isDirectory
-    else {
-      return false
+  func getCorrectOutput() -> URL {
+    if let output = output {
+      return .init(fileURLWithPath: output)
+    } else if convertToIconSet {
+      // Replace the input extension with the 'iconset' extension.
+      return URL(fileURLWithPath: input)
+        .deletingPathExtension()
+        .appendingPathExtension("iconset")
+    } else {
+      // Replace the input extension with the 'icns' extension.
+      return URL(fileURLWithPath: input)
+        .deletingPathExtension()
+        .appendingPathExtension("icns")
     }
-    return isDirectory
   }
   
   func getImage(from path: String) throws -> NSImage {
     let url = URL(fileURLWithPath: path)
     do {
       let imageData = try Data(contentsOf: url)
-      
       guard let image = NSImage(data: imageData) else {
         throw CreationError("File is not a valid image format.")
       }
-      
       guard image.size.width == image.size.height else {
-        throw CreationError("Image must be square.")
+        throw CreationError("Image width and height must be equal.")
       }
-      
       return image
     } catch let error as CreationError {
       throw error
     } catch {
-      throw CreationError("Invalid image.")
+      throw CreationError(error.localizedDescription)
     }
   }
 }
