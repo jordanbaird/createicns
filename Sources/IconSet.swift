@@ -10,11 +10,9 @@ import Cocoa
 
 /// Represents an 'iconset' file.
 struct IconSet {
-  typealias IconDimensions = (width: CGFloat, height: CGFloat, stringRepresentation: String)
-  
   typealias Icon = (data: Data, name: String)
   
-  private let dimensions: [IconDimensions] = [
+  private let dimensions: [(CGFloat, CGFloat, String)] = [
     (16,   16,   "16x16"),
     (32,   32,   "16x16@2x"),
     (32,   32,   "32x32"),
@@ -27,31 +25,21 @@ struct IconSet {
     (1024, 1024, "512x512@2x")
   ]
   
-  var icons: [Icon] { _icons }
-  
-  private var _icons = [Icon]()
-  
-  let image: NSImage
+  private(set) var icons = [Icon]()
   
   init(image: NSImage) throws {
-    self.image = image
-    _icons = try dimensions.map {
-      try createImageFile(
-        from: image,
-        size: .init(width: $0.width, height: $0.height),
-        name: $0.stringRepresentation)
+    icons = try dimensions.map {
+      try createIcon(from: image, width: $0.0, height: $0.1, name: $0.2)
     }
   }
   
-  private func createImageFile(
+  private func createIcon(
     from image: NSImage,
-    size: NSSize,
+    width: CGFloat,
+    height: CGFloat,
     name: String
   ) throws -> Icon {
-    let size = NSSize(
-      width: size.width / 2,
-      height: size.height / 2)
-    
+    let size = CGSize(width: width / 2, height: height / 2)
     let newImage = NSImage(size: size)
     
     newImage.lockFocus()
@@ -62,29 +50,26 @@ struct IconSet {
       fraction: 1)
     newImage.unlockFocus()
     
-    let rep = NSBitmapImageRep(data: newImage.tiffRepresentation!)
-    guard let pngData = rep?.representation(
-      using: .png,
-      properties: [:])
+    guard
+      let tiffRep = newImage.tiffRepresentation,
+      let bitmapRep = NSBitmapImageRep(data: tiffRep),
+      let pngData = bitmapRep.representation(using: .png, properties: [:])
     else {
-      throw CreationError("Could not create png data for iconset.")
+      throw CreationError("Could not create data for iconset.")
     }
+    
     return Icon(data: pngData, name: name)
   }
   
   func write(to url: URL) throws {
     do {
-      try FileManager.default.createDirectory(
-        at: url,
-        withIntermediateDirectories: true)
+      try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
     } catch {
       throw CreationError(error.localizedDescription)
     }
     for icon in icons {
       do {
-        try icon.data.write(
-          to: url.appendingPathComponent(
-            "icon_" + icon.name + ".png"))
+        try icon.data.write(to: url.appendingPathComponent("icon_" + icon.name + ".png"))
       } catch {
         throw CreationError(error.localizedDescription)
       }

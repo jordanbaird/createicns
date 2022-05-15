@@ -12,7 +12,9 @@ import Prism
 struct CreationError: LocalizedError {
   let message: String
   
-  var errorDescription: String? { message.ansiRed }
+  var errorDescription: String? {
+    message.foregroundColor(.red)
+  }
   
   init(_ message: String) {
     self.message = message

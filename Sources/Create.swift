@@ -19,24 +19,22 @@ struct Create: ParsableCommand {
   }()
   
   @Argument(help: """
-    An image file from which to create an icon. The image's width and height \
-    must be equal.
-    
+    An image file from which to create an icon. The image's width and \
+    height must be equal.\n
     """)
   var input: String
   
   @Argument(help: """
-    The output path of the icon. The path must have the 'icns' file extension. \
-    If no output is provided, the icon will be saved in the same parent directory \
-    as the input.
-    
+    The output path of the icon. The path must have the 'icns' file \
+    extension. If no output is provided, the icon will be saved in the \
+    same parent directory as the input.\n
     """)
   var output: String?
   
   @Flag(name: [.customShort("s"), .customLong("iconset")], help: """
-    Convert the input into an iconset file instead of icns. If this option is \
-    provided, the output path must have the 'iconset' extension instead of 'icns'.
-    
+    Convert the input into an iconset file instead of icns. If this option \
+    is provided, the output path must have the 'iconset' extension instead \
+    of 'icns'.\n
     """)
   var convertToIconSet = false
   
@@ -72,7 +70,7 @@ struct Create: ParsableCommand {
       successMessage = "Icon successfully created."
     }
     
-    print(successMessage.ansiGreen)
+    print(successMessage.foregroundColor(.green))
   }
 }
 

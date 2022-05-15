@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		718F2F6E2830B73C00347BDA /* Prism in Frameworks */ = {isa = PBXBuildFile; productRef = 718F2F6D2830B73C00347BDA /* Prism */; };
 		71CEA02027DDA18D00E747B8 /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = 71CEA01F27DDA18D00E747B8 /* ArgumentParser */; };
-		71CEA02327DDA1BB00E747B8 /* Prism in Frameworks */ = {isa = PBXBuildFile; productRef = 71CEA02227DDA1BB00E747B8 /* Prism */; };
 		71CEA02527DDA1CA00E747B8 /* Create.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71CEA02427DDA1CA00E747B8 /* Create.swift */; };
 		71CEA02727DDA1CF00E747B8 /* IconSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71CEA02627DDA1CF00E747B8 /* IconSet.swift */; };
 		71CEA02927DDA1D300E747B8 /* IconUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71CEA02827DDA1D300E747B8 /* IconUtil.swift */; };
@@ -40,7 +40,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				71CEA02327DDA1BB00E747B8 /* Prism in Frameworks */,
+				718F2F6E2830B73C00347BDA /* Prism in Frameworks */,
 				71CEA02027DDA18D00E747B8 /* ArgumentParser in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -93,7 +93,7 @@
 			name = createicns;
 			packageProductDependencies = (
 				71CEA01F27DDA18D00E747B8 /* ArgumentParser */,
-				71CEA02227DDA1BB00E747B8 /* Prism */,
+				718F2F6D2830B73C00347BDA /* Prism */,
 			);
 			productName = createicns;
 			productReference = 71CEA01427DDA16600E747B8 /* createicns */;
@@ -125,7 +125,7 @@
 			mainGroup = 71CEA00B27DDA16600E747B8;
 			packageReferences = (
 				71CEA01E27DDA18D00E747B8 /* XCRemoteSwiftPackageReference "swift-argument-parser" */,
-				71CEA02127DDA1BB00E747B8 /* XCRemoteSwiftPackageReference "Prism" */,
+				718F2F6C2830B73C00347BDA /* XCRemoteSwiftPackageReference "Prism" */,
 			);
 			productRefGroup = 71CEA01527DDA16600E747B8 /* Products */;
 			projectDirPath = "";
@@ -312,6 +312,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		718F2F6C2830B73C00347BDA /* XCRemoteSwiftPackageReference "Prism" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/jordanbaird/Prism";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.0.1;
+			};
+		};
 		71CEA01E27DDA18D00E747B8 /* XCRemoteSwiftPackageReference "swift-argument-parser" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/apple/swift-argument-parser.git";
@@ -320,26 +328,18 @@
 				minimumVersion = 1.0.0;
 			};
 		};
-		71CEA02127DDA1BB00E747B8 /* XCRemoteSwiftPackageReference "Prism" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/jordanbaird/Prism";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.1.0;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		718F2F6D2830B73C00347BDA /* Prism */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 718F2F6C2830B73C00347BDA /* XCRemoteSwiftPackageReference "Prism" */;
+			productName = Prism;
+		};
 		71CEA01F27DDA18D00E747B8 /* ArgumentParser */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 71CEA01E27DDA18D00E747B8 /* XCRemoteSwiftPackageReference "swift-argument-parser" */;
 			productName = ArgumentParser;
-		};
-		71CEA02227DDA1BB00E747B8 /* Prism */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 71CEA02127DDA1BB00E747B8 /* XCRemoteSwiftPackageReference "Prism" */;
-			productName = Prism;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
