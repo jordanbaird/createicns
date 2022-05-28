@@ -18,25 +18,12 @@ struct Create: ParsableCommand {
     return configuration
   }()
   
-  @Argument(help: """
-    An image file from which to create an icon. The image's width and \
-    height must be equal.\n
-    """)
+  @Argument(help: .input)
   var input: String
-  
-  @Argument(help: """
-    The output path of the icon. The path must have the 'icns' file \
-    extension. If no output is provided, the icon will be saved in the \
-    same parent directory as the input.\n
-    """)
+  @Argument(help: .output)
   var output: String?
-  
-  @Flag(name: [.customShort("s"), .customLong("iconset")], help: """
-    Convert the input into an iconset file instead of icns. If this option \
-    is provided, the output path must have the 'iconset' extension instead \
-    of 'icns'.\n
-    """)
-  var convertToIconSet = false
+  @Flag(name: [.customShort("s"), .customLong("iconset")], help: .isIconset)
+  var isIconset = false
   
   func run() throws {
     let output = getCorrectOutput()
@@ -45,7 +32,7 @@ struct Create: ParsableCommand {
       throw CreationError("File '\(output.path)' already exists.")
     }
     
-    if convertToIconSet {
+    if isIconset {
       print("Creating iconset...")
     } else {
       print("Creating icon...")
@@ -55,7 +42,7 @@ struct Create: ParsableCommand {
     
     var successMessage: String
     
-    if convertToIconSet {
+    if isIconset {
       guard output.pathExtension == "iconset" else {
         throw CreationError("Output path must have '.iconset' extension.")
       }
@@ -78,7 +65,7 @@ extension Create {
   func getCorrectOutput() -> URL {
     if let output = output {
       return .init(fileURLWithPath: output)
-    } else if convertToIconSet {
+    } else if isIconset {
       // Replace the input extension with the 'iconset' extension.
       return URL(fileURLWithPath: input)
         .deletingPathExtension()
