@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		718F2F6E2830B73C00347BDA /* Prism in Frameworks */ = {isa = PBXBuildFile; productRef = 718F2F6D2830B73C00347BDA /* Prism */; };
+		71C9713C28426BBF0058A130 /* Help.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71C9713B28426BBF0058A130 /* Help.swift */; };
 		71CEA02027DDA18D00E747B8 /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = 71CEA01F27DDA18D00E747B8 /* ArgumentParser */; };
 		71CEA02527DDA1CA00E747B8 /* Create.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71CEA02427DDA1CA00E747B8 /* Create.swift */; };
 		71CEA02727DDA1CF00E747B8 /* IconSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71CEA02627DDA1CF00E747B8 /* IconSet.swift */; };
@@ -28,6 +29,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		71C9713B28426BBF0058A130 /* Help.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Help.swift; sourceTree = "<group>"; };
 		71CEA01427DDA16600E747B8 /* createicns */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = createicns; sourceTree = BUILT_PRODUCTS_DIR; };
 		71CEA02427DDA1CA00E747B8 /* Create.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Create.swift; sourceTree = "<group>"; };
 		71CEA02627DDA1CF00E747B8 /* IconSet.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IconSet.swift; sourceTree = "<group>"; };
@@ -68,6 +70,7 @@
 			isa = PBXGroup;
 			children = (
 				71CEA02427DDA1CA00E747B8 /* Create.swift */,
+				71C9713B28426BBF0058A130 /* Help.swift */,
 				71CEA02A27DDA1D800E747B8 /* CreationError.swift */,
 				71CEA02627DDA1CF00E747B8 /* IconSet.swift */,
 				71CEA02827DDA1D300E747B8 /* IconUtil.swift */,
@@ -141,6 +144,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				71C9713C28426BBF0058A130 /* Help.swift in Sources */,
 				71CEA02927DDA1D300E747B8 /* IconUtil.swift in Sources */,
 				71CEA02B27DDA1D800E747B8 /* CreationError.swift in Sources */,
 				71CEA02727DDA1CF00E747B8 /* IconSet.swift in Sources */,
