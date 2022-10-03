@@ -15,7 +15,7 @@ struct Create: ParsableCommand {
   static var configuration: CommandConfiguration = {
     var configuration = CommandConfiguration()
     configuration.commandName = "createicns"
-    configuration.version = "0.0.1"
+    configuration.version = "0.0.2"
     return configuration
   }()
   
