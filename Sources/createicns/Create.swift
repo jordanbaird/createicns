@@ -64,16 +64,16 @@ struct Create: ParsableCommand {
 
 extension Create {
   func getCorrectOutput() -> URL {
-    if let output = output {
+    if let output {
       return .init(fileURLWithPath: output)
     } else if isIconset {
       // Replace the input extension with the 'iconset' extension.
-      return URL(fileURLWithPath: input)
+      return .init(fileURLWithPath: input)
         .deletingPathExtension()
         .appendingPathExtension("iconset")
     } else {
       // Replace the input extension with the 'icns' extension.
-      return URL(fileURLWithPath: input)
+      return .init(fileURLWithPath: input)
         .deletingPathExtension()
         .appendingPathExtension("icns")
     }
