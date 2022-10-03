@@ -1,8 +1,6 @@
 # createicns
 Create an icns file from any image.
 
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/jordanbaird/createicns/Xcode%20-%20Build%20and%20Analyze)
-
 ![Header](https://user-images.githubusercontent.com/90936861/158078314-54549739-f738-47e3-af5a-7b2d516a66f4.svg)
 
 ## Install
