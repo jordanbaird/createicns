@@ -75,16 +75,14 @@ struct IconSet {
   
   func write(to url: URL) throws {
     do {
-      try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+      try FileManager.default.createDirectory(
+        at: url,
+        withIntermediateDirectories: true)
     } catch {
       throw CreationError(error.localizedDescription)
     }
     for icon in icons {
       try icon.write(to: url)
     }
-  }
-  
-  func remove(at url: URL) {
-    try? FileManager.default.removeItem(at: url)
   }
 }

@@ -58,7 +58,7 @@ class IconUtil {
     }()
     
     // 'iconutil' only returns data if something went wrong.
-    if let data = data {
+    if let data {
       throw CreationError(.init(data: data, encoding: .utf8)!)
     }
     

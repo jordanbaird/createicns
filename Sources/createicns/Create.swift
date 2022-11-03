@@ -33,32 +33,25 @@ struct Create: ParsableCommand {
       throw CreationError("File '\(output.path)' already exists.")
     }
     
-    if isIconset {
-      print("Creating iconset...")
-    } else {
-      print("Creating icon...")
+    let iconSet = {
+      try IconSet(image: getImage(from: input))
     }
     
-    let iconSet = try IconSet(image: try getImage(from: input))
-    
-    var successMessage: String
-    
     if isIconset {
+      print("Creating iconset...")
       guard output.pathExtension == "iconset" else {
         throw CreationError("Output path must have '.iconset' extension.")
       }
-      try iconSet.write(to: output)
-      successMessage = "Iconset successfully created."
+      try iconSet().write(to: output)
+      print("Iconset successfully created.".foregroundColor(.green))
     } else {
+      print("Creating icon...")
       guard output.pathExtension == "icns" else {
         throw CreationError("Output path must have '.icns' extension.")
       }
-      let iconUtil = IconUtil(iconSet: iconSet)
-      try iconUtil.run(writingTo: output)
-      successMessage = "Icon successfully created."
+      try IconUtil(iconSet: iconSet()).run(writingTo: output)
+      print("Icon successfully created.".foregroundColor(.green))
     }
-    
-    print(successMessage.foregroundColor(.green))
   }
 }
 
