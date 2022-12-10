@@ -10,13 +10,14 @@ import ArgumentParser
 
 extension ArgumentHelp {
   static let input: Self = """
-    An image file from which to create an icon. The image's width and \
-    height must be equal.\n
+    A valid image file from which to create an icon. Most common bitmap \
+    and vector file formats are supported. The image's width and height \
+    must be equal.\n
     """
 
   static let output: Self = """
-    The output path of the icon. The path must have the 'icns' file \
-    extension. If no output is provided, the icon will be saved in the \
+    The output path of the icon. If provided, the path must have the 'icns' \
+    file extension. If no output is provided, the icon will be saved in the \
     same parent directory as the input.\n
     """
 
