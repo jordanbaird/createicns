@@ -18,75 +18,85 @@ struct Create: ParsableCommand {
     configuration.version = "0.0.3"
     return configuration
   }()
-  
+
   @Argument(help: .input)
   var input: String
   @Argument(help: .output)
   var output: String?
-  @Flag(name: [.customShort("s"), .customLong("iconset")], help: .isIconset)
+  @Flag(name: .iconSet, help: .isIconset)
   var isIconset = false
-  
-  func run() throws {
-    let output = getCorrectOutput()
-    
-    guard !FileManager.default.fileExists(atPath: output.path) else {
-      throw CreationError("File '\(output.path)' already exists.")
-    }
-    
-    let iconSet = {
-      try IconSet(image: getImage(from: input))
-    }
-    
-    if isIconset {
-      print("Creating iconset...")
-      guard output.pathExtension == "iconset" else {
-        throw CreationError("Output path must have '.iconset' extension.")
-      }
-      try iconSet().write(to: output)
-      print("Iconset successfully created.".foregroundColor(.green))
+
+  private var correctExtension: String {
+    isIconset ? "iconset" : "icns"
+  }
+
+  private var correctOutput: URL {
+    if let output {
+      return .init(fileURLWithPath: output)
     } else {
-      print("Creating icon...")
-      guard output.pathExtension == "icns" else {
-        throw CreationError("Output path must have '.icns' extension.")
-      }
-      try IconUtil(iconSet: iconSet()).run(writingTo: output)
-      print("Icon successfully created.".foregroundColor(.green))
+      return .init(fileURLWithPath: input)
+        .deletingPathExtension()
+        .appendingPathExtension(correctExtension)
     }
+  }
+
+  private var successMessage: Prism {
+    Prism {
+      ForegroundColor(.green) {
+        if isIconset {
+          "Iconset successfully created."
+        } else {
+          "Icon successfully created."
+        }
+      }
+    }
+  }
+
+  func run() throws {
+    let output = correctOutput
+
+    do {
+      try verifyOutput(output)
+
+      let iconSet = try IconSet(image: getImage(from: input))
+
+      if isIconset {
+        try iconSet.write(to: output)
+      } else {
+        try IconUtil(iconSet: iconSet).run(writingTo: output)
+      }
+    } catch {
+      throw CreationError(error)
+    }
+
+    print(successMessage)
   }
 }
 
 extension Create {
-  func getCorrectOutput() -> URL {
-    if let output {
-      return .init(fileURLWithPath: output)
-    } else if isIconset {
-      // Replace the input extension with the 'iconset' extension.
-      return .init(fileURLWithPath: input)
-        .deletingPathExtension()
-        .appendingPathExtension("iconset")
-    } else {
-      // Replace the input extension with the 'icns' extension.
-      return .init(fileURLWithPath: input)
-        .deletingPathExtension()
-        .appendingPathExtension("icns")
-    }
-  }
-  
   func getImage(from path: String) throws -> NSImage {
     let url = URL(fileURLWithPath: path)
-    do {
-      let imageData = try Data(contentsOf: url)
-      guard let image = NSImage(data: imageData) else {
-        throw CreationError("File is not a valid image format.")
-      }
-      guard image.size.width == image.size.height else {
-        throw CreationError("Image width and height must be equal.")
-      }
-      return image
-    } catch let error as CreationError {
-      throw error
-    } catch {
-      throw CreationError(error.localizedDescription)
+    let imageData = try Data(contentsOf: url)
+    guard let image = NSImage(data: imageData) else {
+      throw CreationError.invalidImageFormat
     }
+    guard image.size.width == image.size.height else {
+      throw CreationError.invalidDimensions
+    }
+    return image
+  }
+
+  func verifyPathExtension(for url: URL) throws {
+    print("Creating '.\(correctExtension)' file...")
+    guard url.pathExtension == correctExtension else {
+      throw CreationError.missingOutputPathExtension(correctExtension)
+    }
+  }
+
+  func verifyOutput(_ url: URL) throws {
+    guard !FileManager.default.fileExists(atPath: url.path) else {
+      throw CreationError.alreadyExists(url)
+    }
+    try verifyPathExtension(for: url)
   }
 }
