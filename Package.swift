@@ -7,10 +7,12 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/apple/swift-argument-parser",
-            from: "1.1.4"),
+            from: "1.2.2"
+        ),
         .package(
             url: "https://github.com/jordanbaird/Prism",
-            from: "0.0.5"),
+            from: "0.1.0"
+        ),
     ],
     targets: [
         .executableTarget(
@@ -18,10 +20,13 @@ let package = Package(
             dependencies: [
                 .product(
                     name: "ArgumentParser",
-                    package: "swift-argument-parser"),
+                    package: "swift-argument-parser"
+                ),
                 .product(
                     name: "Prism",
-                    package: "Prism"),
-            ]),
+                    package: "Prism"
+                ),
+            ]
+        ),
     ]
 )

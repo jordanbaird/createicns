@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/jordanbaird/Prism",
       "state" : {
-        "revision" : "9bb480683de5d527a87a994c8a55ac188158bb14",
-        "version" : "0.0.9"
+        "revision" : "2d25c541f710caa4b8dc538300444bfd88259472",
+        "version" : "0.1.0"
       }
     },
     {
@@ -14,8 +14,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-argument-parser",
       "state" : {
-        "revision" : "fddd1c00396eed152c45a46bea9f47b98e59301d",
-        "version" : "1.2.0"
+        "revision" : "fee6933f37fde9a5e12a1e4aeaa93fe60116ff2a",
+        "version" : "1.2.2"
       }
     }
   ],
