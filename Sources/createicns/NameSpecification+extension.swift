@@ -9,5 +9,5 @@
 import ArgumentParser
 
 extension NameSpecification {
-  static let iconSet: Self = [.customShort("s"), .customLong("iconset")]
+    static let iconSet: Self = [.customShort("s"), .customLong("iconset")]
 }
