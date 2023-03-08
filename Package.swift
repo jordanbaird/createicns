@@ -4,6 +4,12 @@ import PackageDescription
 
 let package = Package(
     name: "createicns",
+    products: [
+        .executable(
+            name: "createicns",
+            targets: ["createicns"]
+        ),
+    ],
     dependencies: [
         .package(
             url: "https://github.com/apple/swift-argument-parser",
