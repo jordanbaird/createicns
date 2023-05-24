@@ -3,10 +3,9 @@
 // createicns
 //
 
+import Foundation
 import ImageIO
-#if canImport(UniformTypeIdentifiers)
-import UniformTypeIdentifiers
-#endif
+import UniformTypes
 
 struct Image {
 
@@ -24,15 +23,6 @@ struct Image {
 
     var colorSpace: CGColorSpace? {
         cgImage.colorSpace
-    }
-
-    var pngData: Data {
-        get throws {
-            guard let data = dataDestination(forType: .png).data else {
-                throw CreationError.invalidData
-            }
-            return data
-        }
     }
 
     // MARK: Initializers
@@ -146,26 +136,19 @@ extension Image {
 
         // MARK: Static Properties
 
-        static let image: Self = {
-            if #available(macOS 11.0, *) {
-                return Self(rawValue: UTType.image.identifier)
-            }
-            return Self(rawValue: kUTTypeImage as String)
-        }()
+        static let image = Self(rawValue: UniformType.image.identifier)
 
-        static let png: Self = {
-            if #available(macOS 11.0, *) {
-                return Self(rawValue: UTType.png.identifier)
-            }
-            return Self(rawValue: kUTTypePNG as String)
-        }()
+        static let png = Self(rawValue: UniformType.png.identifier)
 
-        static let pdf: Self = {
-            if #available(macOS 11.0, *) {
-                return Self(rawValue: UTType.pdf.identifier)
-            }
-            return Self(rawValue: kUTTypePDF as String)
-        }()
+        static let gif = Self(rawValue: UniformType.gif.identifier)
+
+        static let jpeg = Self(rawValue: UniformType.jpeg.identifier)
+
+        static let webP = Self(rawValue: UniformType.webP.identifier)
+
+        static let tiff = Self(rawValue: UniformType.tiff.identifier)
+
+        static let bmp = Self(rawValue: UniformType.bmp.identifier)
 
         // TODO: Try to figure out a good way to do SVG.
         // static let svg: Self = {
@@ -174,6 +157,10 @@ extension Image {
         //     }
         //     return Self(rawValue: kUTTypeScalableVectorGraphics as String)
         // }()
+
+        static let rawImage = Self(rawValue: UniformType.rawImage.identifier)
+
+        static let pdf = Self(rawValue: UniformType.pdf.identifier)
 
         static var validTypes: [Self] {
             let prevalidatedTypes: [Self] = [
@@ -208,22 +195,11 @@ extension Image {
         }
 
         init(pathExtension: String) {
-            #if canImport(UniformTypeIdentifiers)
-            if #available(macOS 11.0, *) {
-                guard let type = UTType(tag: pathExtension, tagClass: .filenameExtension, conformingTo: nil) else {
-                    self = .image
-                    return
-                }
-                self.init(rawValue: type.identifier)
-                return
-            }
-            #endif
-            let tagClass = kUTTagClassFilenameExtension
-            guard let type = UTTypeCreatePreferredIdentifierForTag(tagClass, pathExtension as CFString, nil) else {
+            guard let type = UniformType(tag: pathExtension, tagClass: .filenameExtension, conformingTo: nil) else {
                 self = .image
                 return
             }
-            self.init(rawValue: type.takeRetainedValue() as String)
+            self.init(rawValue: type.identifier)
         }
 
         init(url: URL) {

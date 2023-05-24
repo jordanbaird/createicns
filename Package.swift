@@ -21,6 +21,9 @@ let package = Package(
         ),
     ],
     targets: [
+        .target(
+            name: "UniformTypes"
+        ),
         .executableTarget(
             name: "createicns",
             dependencies: [
@@ -32,6 +35,7 @@ let package = Package(
                     name: "Prism",
                     package: "Prism"
                 ),
+                "UniformTypes",
             ]
         ),
     ]
