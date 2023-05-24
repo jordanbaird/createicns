@@ -151,12 +151,7 @@ extension Image {
         static let bmp = Self(rawValue: UniformType.bmp.identifier)
 
         // TODO: Try to figure out a good way to do SVG.
-        // static let svg: Self = {
-        //     if #available(macOS 11.0, *) {
-        //         return Self(rawValue: UTType.svg.identifier)
-        //     }
-        //     return Self(rawValue: kUTTypeScalableVectorGraphics as String)
-        // }()
+        // static let svg = Self(rawValue: UniformType.svg.identifier)
 
         static let rawImage = Self(rawValue: UniformType.rawImage.identifier)
 
