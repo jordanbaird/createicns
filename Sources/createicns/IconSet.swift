@@ -3,7 +3,7 @@
 // createicns
 //
 
-import Cocoa
+import Foundation
 
 /// Represents an 'iconset' file.
 struct IconSet {
@@ -15,9 +15,9 @@ struct IconSet {
 
     let icons: [Icon]
 
-    init(image: NSImage) throws {
-        icons = try Self.dimensions.map { dimension in
-            try .init(image: image, dimension: dimension)
+    init(image: Image) throws {
+        self.icons = try Self.dimensions.map { dimension in
+            try Icon(image: image, dimension: dimension)
         }
     }
 
@@ -34,8 +34,8 @@ extension IconSet {
         let d: Int
         let scale: Int
 
-        var size: NSSize {
-            .init(width: d * scale, height: d * scale)
+        var size: CGSize {
+            CGSize(width: d * scale, height: d * scale)
         }
 
         var suffix: String {
@@ -51,42 +51,41 @@ extension IconSet {
 
 extension IconSet.Dimension {
     static func * (lhs: Self, rhs: Int) -> Self {
-        .init(d: lhs.d, scale: lhs.scale * rhs)
+        Self(d: lhs.d, scale: lhs.scale * rhs)
     }
 }
 
 extension IconSet.Dimension: ExpressibleByIntegerLiteral {
-    init(integerLiteral value: IntegerLiteralType) {
+    init(integerLiteral value: Int) {
         self.init(d: value, scale: 1)
     }
 }
 
 extension IconSet {
     struct Icon {
-        let data: Data
+        let image: Image
         let suffix: String
 
-        init(image: NSImage, dimension: Dimension) throws {
-            guard
-                let tiffRep = image.resized(to: dimension.size).tiffRepresentation,
-                let bitmapRep = NSBitmapImageRep(data: tiffRep),
-                let pngData = bitmapRep.representation(using: .png, properties: [:])
-            else {
-                throw CreationError.invalidData
+        init(image: Image, dimension: Dimension) throws {
+            guard let image = image.resized(to: dimension.size) else {
+                throw CreationError.resizeFailure
             }
-            data = pngData
-            suffix = dimension.suffix
+            self.image = image
+            self.suffix = dimension.suffix
         }
 
         func writeInto(directory url: URL) throws {
-            var isDirectory: ObjCBool = false
-            guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory) else {
-                throw CreationError.doesNotExist(url)
+            let verifier = FileVerifier(url: url)
+            guard
+                verifier.fileExists,
+                verifier.isDirectory
+            else {
+                throw CreationError.directoryDoesNotExist(verifier)
             }
-            guard isDirectory.boolValue else {
-                throw CreationError.notADirectory(url)
-            }
-            try data.write(to: url.appendingPathComponent("icon_" + suffix + ".png"))
+            try image.urlDestination(
+                forURL: url.appendingPathComponent("icon_" + suffix + ".png"),
+                type: .png
+            ).write()
         }
     }
 }

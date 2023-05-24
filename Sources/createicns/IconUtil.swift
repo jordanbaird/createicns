@@ -66,6 +66,7 @@ class IconUtil {
             for: .itemReplacementDirectory,
             in: .userDomainMask,
             appropriateFor: output,
-            create: true)
+            create: true
+        )
     }
 }
