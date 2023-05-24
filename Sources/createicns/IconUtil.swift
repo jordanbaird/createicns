@@ -16,7 +16,12 @@ class IconUtil {
     }
 
     func run(writingTo output: URL) throws {
-        let tempURL = try createTemp(for: output)
+        let tempURL = try FileManager.default.url(
+            for: .itemReplacementDirectory,
+            in: .userDomainMask,
+            appropriateFor: output,
+            create: true
+        )
         let iconSetURL = tempURL.appendingPathComponent("icon.iconset")
         let iconURL = tempURL.appendingPathComponent("icon.icns")
 
@@ -50,23 +55,12 @@ class IconUtil {
             }
         }()
 
-        // 'iconutil' only returns data if something went wrong.
+        // iconutil only returns data if something went wrong.
         if let data {
             throw CreationError(data)
         }
 
-        // Copying the item seems to be faster than moving it. It doesn't matter
-        // either way, as the entire temp directory is removed in the next line.
         try FileManager.default.copyItem(at: iconURL, to: output)
         try FileManager.default.removeItem(at: tempURL)
-    }
-
-    private func createTemp(for output: URL) throws -> URL {
-        try FileManager.default.url(
-            for: .itemReplacementDirectory,
-            in: .userDomainMask,
-            appropriateFor: output,
-            create: true
-        )
     }
 }

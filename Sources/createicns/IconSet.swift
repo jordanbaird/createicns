@@ -9,7 +9,7 @@ import Foundation
 struct IconSet {
     private static var dimensions: [Dimension] {
         [16, 32, 128, 256, 512].flatMap { dimension in
-            [dimension, dimension * 2]
+            [dimension, dimension * 2] // FIXME: What does this even mean?
         }
     }
 
