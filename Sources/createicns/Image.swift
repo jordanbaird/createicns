@@ -11,12 +11,15 @@ struct Image {
 
     // MARK: Instance Properties
 
-    let cgImage: CGImage
+    private let context: CGContext
+
+    private let drawingPrep: (CGContext) -> Bool
 
     // MARK: Initializers
 
-    init(cgImage: CGImage) {
-        self.cgImage = cgImage
+    private init(context: CGContext, drawingPrep: @escaping (CGContext) -> Bool) {
+        self.context = context
+        self.drawingPrep = drawingPrep
     }
 
     init(url: URL) throws {
@@ -44,20 +47,27 @@ struct Image {
 
             guard
                 let colorSpace = CGColorSpace(name: CGColorSpace.sRGB),
-                let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0, space: colorSpace, bitmapInfo: alphaInfo)
+                let context = CGContext(
+                    data: nil,
+                    width: width,
+                    height: height,
+                    bitsPerComponent: 8,
+                    bytesPerRow: 0,
+                    space: colorSpace,
+                    bitmapInfo: alphaInfo
+                )
             else {
                 throw CreationError.unknownError // FIXME: Need a better error.
             }
 
-            context.interpolationQuality = .high
-            context.clear(rect)
-            context.drawPDFPage(page)
-
-            guard let image = context.makeImage() else {
-                throw CreationError.unknownError // FIXME: Need a better error.
-            }
-
-            self.init(cgImage: image)
+            self.init(context: context, drawingPrep: { context in
+                context.setAllowsAntialiasing(true)
+                context.setShouldAntialias(true)
+                context.interpolationQuality = .high
+                context.clear(rect)
+                context.drawPDFPage(page)
+                return true
+            })
         default:
             let options: [CFString: CFTypeRef] = [
                 kCGImageSourceTypeIdentifierHint: type.rawValue as CFString,
@@ -72,10 +82,37 @@ struct Image {
                 throw CreationError.unknownError // FIXME: Need a better error.
             }
 
-            self.init(cgImage: cgImage)
+            let width = cgImage.width
+            let height = cgImage.height
+
+            let bitmapInfo = CGBitmapInfo.byteOrderDefault.rawValue
+            let alphaInfo = CGImageAlphaInfo.premultipliedLast.rawValue
+
+            guard
+                let colorSpace = cgImage.colorSpace,
+                let context = CGContext(
+                    data: nil,
+                    width: width,
+                    height: height,
+                    bitsPerComponent: 8,
+                    bytesPerRow: 0,
+                    space: colorSpace,
+                    bitmapInfo: bitmapInfo | alphaInfo
+                )
+            else {
+                throw CreationError.unknownError // FIXME: Need a better error.
+            }
+
+            self.init(context: context, drawingPrep: { context in
+                context.setAllowsAntialiasing(true)
+                context.setShouldAntialias(true)
+                context.interpolationQuality = .high
+                context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+                return true
+            })
         }
 
-        if cgImage.width != cgImage.height {
+        if context.width != context.height {
             throw CreationError.invalidDimensions
         }
     }
@@ -90,28 +127,42 @@ struct Image {
         Destination.urlDestination(forURL: url, image: self, type: type)
     }
 
+    func makeCGImage() -> CGImage? {
+        guard drawingPrep(context) else {
+            return nil
+        }
+        return context.makeImage()
+    }
+
     func resized(to size: CGSize) -> Self? {
         let width = Int(size.width)
         let height = Int(size.height)
 
-        let bitmapInfo = CGBitmapInfo.byteOrderDefault.rawValue
-        let alphaInfo = CGImageAlphaInfo.premultipliedLast.rawValue
-
         guard
-            let colorSpace = cgImage.colorSpace,
-            let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0, space: colorSpace, bitmapInfo: bitmapInfo | alphaInfo)
+            let colorSpace = context.colorSpace,
+            let context = CGContext(
+                data: nil,
+                width: width,
+                height: height,
+                bitsPerComponent: context.bitsPerComponent,
+                bytesPerRow: 0,
+                space: colorSpace,
+                bitmapInfo: context.bitmapInfo.rawValue | context.alphaInfo.rawValue
+            )
         else {
             return nil
         }
 
-        context.interpolationQuality = .high
-        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
-
-        guard let resizedImage = context.makeImage() else {
-            return nil
-        }
-
-        return Self(cgImage: resizedImage)
+        return Self(context: context, drawingPrep: { context in
+            guard let cgImage = makeCGImage() else {
+                return false
+            }
+            context.setAllowsAntialiasing(true)
+            context.setShouldAntialias(true)
+            context.interpolationQuality = .high
+            context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+            return true
+        })
     }
 }
 
@@ -239,10 +290,13 @@ extension Image.Destination<Data> {
         guard data.isEmpty else {
             return data as Data
         }
-        guard let destination = CGImageDestinationCreateWithData(data, type.rawValue as CFString, 1, nil) else {
+        guard
+            let destination = CGImageDestinationCreateWithData(data, type.rawValue as CFString, 1, nil),
+            let cgImage = image.makeCGImage()
+        else {
             return nil
         }
-        CGImageDestinationAddImage(destination, image.cgImage, nil)
+        CGImageDestinationAddImage(destination, cgImage, nil)
         guard CGImageDestinationFinalize(destination) else {
             return nil
         }
@@ -265,7 +319,10 @@ extension Image.Destination<URL> {
         guard let destination = CGImageDestinationCreateWithURL(url as CFURL, type.rawValue as CFString, 1, nil) else {
             throw CreationError.invalidDestination
         }
-        CGImageDestinationAddImage(destination, image.cgImage, nil)
+        guard let cgImage = image.makeCGImage() else {
+            throw CreationError.unknownError // FIXME: Need a better error.
+        }
+        CGImageDestinationAddImage(destination, cgImage, nil)
         if !CGImageDestinationFinalize(destination) {
             throw CreationError.invalidDestination
         }
