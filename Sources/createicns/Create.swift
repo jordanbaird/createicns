@@ -46,39 +46,34 @@ struct Create: ParsableCommand {
     // MARK: Run
 
     mutating func run() throws {
+        let write: (inout Self, IconSet) throws -> Void
+
         if isIconset {
             print("Creating iconset...")
+            write = { cmd, iconSet in
+                try iconSet.write(to: cmd.outputURL)
+                print("Iconset successfully created.".foregroundColor(.green))
+            }
         } else {
             print("Creating icon...")
+            write = { cmd, iconSet in
+                try IconUtil(iconSet: iconSet).run(writingTo: cmd.outputURL)
+                print("Icon successfully created.".foregroundColor(.green))
+            }
         }
 
         do {
             try verifyInputAndOutput()
-            let image = try getImage()
-            let iconSet = try IconSet(image: image)
-            try write(iconSet: iconSet)
+            let iconSet = try IconSet(image: Image(url: inputURL))
+            try write(&self, iconSet)
         } catch {
             throw CreationError(error)
-        }
-
-        if isIconset {
-            print("Iconset successfully created.".foregroundColor(.green))
-        } else {
-            print("Icon successfully created.".foregroundColor(.green))
         }
     }
 }
 
 // MARK: Instance Methods
 extension Create {
-    mutating func getImage() throws -> Image {
-        let image = try Image(url: inputURL)
-        guard image.width == image.height else {
-            throw CreationError.invalidDimensions
-        }
-        return image
-    }
-
     mutating func verifyInputAndOutput() throws {
         let inputVerifier = FileVerifier(path: input)
         if !inputVerifier.fileExists {
@@ -97,14 +92,6 @@ extension Create {
         }
         if !outputVerifier.hasPathExtension(correctExtension) {
             throw CreationError.badOutputPathExtension(outputVerifier)
-        }
-    }
-
-    mutating func write(iconSet: IconSet) throws {
-        if isIconset {
-            try iconSet.write(to: outputURL)
-        } else {
-            try IconUtil(iconSet: iconSet).run(writingTo: outputURL)
         }
     }
 }

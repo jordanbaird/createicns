@@ -13,18 +13,6 @@ struct Image {
 
     let cgImage: CGImage
 
-    var width: CGFloat {
-        CGFloat(cgImage.width)
-    }
-
-    var height: CGFloat {
-        CGFloat(cgImage.height)
-    }
-
-    var colorSpace: CGColorSpace? {
-        cgImage.colorSpace
-    }
-
     // MARK: Initializers
 
     init(cgImage: CGImage) {
@@ -33,6 +21,7 @@ struct Image {
 
     init(url: URL) throws {
         let type = TypeIdentifier(url: url)
+
         if !TypeIdentifier.validTypes.contains(type) {
             throw CreationError.invalidImageFormat
         }
@@ -47,20 +36,20 @@ struct Image {
             }
 
             let rect = page.getBoxRect(.mediaBox)
+
+            let width = Int(rect.width)
+            let height = Int(rect.height)
+
+            let alphaInfo = CGImageAlphaInfo.premultipliedLast.rawValue
+
             guard
-                let context = CGContext(
-                    data: nil,
-                    width: Int(rect.width),
-                    height: Int(rect.height),
-                    bitsPerComponent: 8,
-                    bytesPerRow: 0,
-                    space: CGColorSpace(name: CGColorSpace.sRGB)!,
-                    bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-                )
+                let colorSpace = CGColorSpace(name: CGColorSpace.sRGB),
+                let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0, space: colorSpace, bitmapInfo: alphaInfo)
             else {
                 throw CreationError.unknownError // FIXME: Need a better error.
             }
 
+            context.interpolationQuality = .high
             context.clear(rect)
             context.drawPDFPage(page)
 
@@ -71,7 +60,7 @@ struct Image {
             self.init(cgImage: image)
         default:
             let options: [CFString: CFTypeRef] = [
-                kCGImageSourceTypeIdentifierHint: type.cfString,
+                kCGImageSourceTypeIdentifierHint: type.rawValue as CFString,
                 kCGImageSourceShouldCache: kCFBooleanTrue,
                 kCGImageSourceShouldAllowFloat: kCFBooleanTrue,
             ]
@@ -84,6 +73,10 @@ struct Image {
             }
 
             self.init(cgImage: cgImage)
+        }
+
+        if cgImage.width != cgImage.height {
+            throw CreationError.invalidDimensions
         }
     }
 
@@ -105,16 +98,8 @@ struct Image {
         let alphaInfo = CGImageAlphaInfo.premultipliedLast.rawValue
 
         guard
-            let colorSpace,
-            let context = CGContext(
-                data: nil,
-                width: width,
-                height: height,
-                bitsPerComponent: 8,
-                bytesPerRow: 0,
-                space: colorSpace,
-                bitmapInfo: bitmapInfo | alphaInfo
-            )
+            let colorSpace = cgImage.colorSpace,
+            let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0, space: colorSpace, bitmapInfo: bitmapInfo | alphaInfo)
         else {
             return nil
         }
@@ -132,51 +117,8 @@ struct Image {
 
 // MARK: Image.TypeIdentifier
 extension Image {
-    struct TypeIdentifier: RawRepresentable {
-
-        // MARK: Static Properties
-
-        static let image = Self(rawValue: UniformType.image.identifier)
-
-        static let png = Self(rawValue: UniformType.png.identifier)
-
-        static let gif = Self(rawValue: UniformType.gif.identifier)
-
-        static let jpeg = Self(rawValue: UniformType.jpeg.identifier)
-
-        static let webP = Self(rawValue: UniformType.webP.identifier)
-
-        static let tiff = Self(rawValue: UniformType.tiff.identifier)
-
-        static let bmp = Self(rawValue: UniformType.bmp.identifier)
-
-        // TODO: Try to figure out a good way to do SVG.
-        // static let svg = Self(rawValue: UniformType.svg.identifier)
-
-        static let rawImage = Self(rawValue: UniformType.rawImage.identifier)
-
-        static let pdf = Self(rawValue: UniformType.pdf.identifier)
-
-        static var validTypes: [Self] {
-            let prevalidatedTypes: [Self] = [
-                .png,
-                .pdf,
-            ]
-            let identifiers = CGImageSourceCopyTypeIdentifiers() as Array
-            let validTypes = prevalidatedTypes + identifiers.compactMap { Self(value: $0) }
-            var seen = Set<Self>()
-            return validTypes.filter { seen.insert($0).inserted }
-        }
-
-        // MARK: Instance Properties
-
+    struct TypeIdentifier {
         let rawValue: String
-
-        var cfString: CFString {
-            rawValue as CFString
-        }
-
-        // MARK: Initializers
 
         init(rawValue: String) {
             self.rawValue = rawValue
@@ -200,6 +142,40 @@ extension Image {
         init(url: URL) {
             self.init(pathExtension: url.pathExtension)
         }
+
+        // MARK: Constants
+
+        static let image = Self(rawValue: UniformType.image.identifier)
+
+        static let bmp = Self(rawValue: UniformType.bmp.identifier)
+
+        static let gif = Self(rawValue: UniformType.gif.identifier)
+
+        static let jpeg = Self(rawValue: UniformType.jpeg.identifier)
+
+        static let pdf = Self(rawValue: UniformType.pdf.identifier)
+
+        static let png = Self(rawValue: UniformType.png.identifier)
+
+        static let rawImage = Self(rawValue: UniformType.rawImage.identifier)
+
+        // TODO: Try to figure out a good way to do SVG.
+        // static let svg = Self(rawValue: UniformType.svg.identifier)
+
+        static let tiff = Self(rawValue: UniformType.tiff.identifier)
+
+        static let webP = Self(rawValue: UniformType.webP.identifier)
+
+        static let validTypes: [Self] = {
+            let prevalidatedTypes: [Self] = [
+                .pdf,
+                .png,
+            ]
+            let identifiers = CGImageSourceCopyTypeIdentifiers() as Array
+            let validTypes = prevalidatedTypes + identifiers.compactMap { Self(value: $0) }
+            var seen = Set<Self>()
+            return validTypes.filter { seen.insert($0).inserted }
+        }()
     }
 }
 
@@ -208,6 +184,9 @@ extension Image.TypeIdentifier: Equatable { }
 
 // MARK: TypeIdentifier: Hashable
 extension Image.TypeIdentifier: Hashable { }
+
+// MARK: TypeIdentifier: RawRepresentable
+extension Image.TypeIdentifier: RawRepresentable { }
 
 // MARK: Image.Destination
 extension Image {
@@ -260,7 +239,7 @@ extension Image.Destination<Data> {
         guard data.isEmpty else {
             return data as Data
         }
-        guard let destination = CGImageDestinationCreateWithData(data, type.cfString, 1, nil) else {
+        guard let destination = CGImageDestinationCreateWithData(data, type.rawValue as CFString, 1, nil) else {
             return nil
         }
         CGImageDestinationAddImage(destination, image.cgImage, nil)
@@ -283,7 +262,7 @@ extension Image.Destination<URL> {
         guard !verifier.fileExists else {
             throw CreationError.alreadyExists(verifier)
         }
-        guard let destination = CGImageDestinationCreateWithURL(url as CFURL, type.cfString, 1, nil) else {
+        guard let destination = CGImageDestinationCreateWithURL(url as CFURL, type.rawValue as CFString, 1, nil) else {
             throw CreationError.invalidDestination
         }
         CGImageDestinationAddImage(destination, image.cgImage, nil)

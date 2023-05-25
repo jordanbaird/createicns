@@ -7,17 +7,11 @@ import Foundation
 
 /// Represents an 'iconset' file.
 struct IconSet {
-    private static var dimensions: [Dimension] {
-        [16, 32, 128, 256, 512].flatMap { dimension in
-            [dimension, dimension * 2] // FIXME: What does this even mean?
-        }
-    }
-
     let icons: [Icon]
 
-    init(image: Image) throws {
-        self.icons = try Self.dimensions.map { dimension in
-            try Icon(image: image, dimension: dimension)
+    init(image: Image) {
+        self.icons = Dimension.all.map { dimension in
+            Icon(image: image, dimension: dimension)
         }
     }
 
@@ -30,48 +24,44 @@ struct IconSet {
 }
 
 extension IconSet {
-    struct Dimension {
-        let d: Int
+    struct Dimension: CustomStringConvertible {
+        let length: Int
         let scale: Int
 
         var size: CGSize {
-            CGSize(width: d * scale, height: d * scale)
+            CGSize(width: length * scale, height: length * scale)
         }
 
-        var suffix: String {
-            "\(d)x\(d)\(scale == 1 ? "" : "@\(scale)x")"
+        var scaleDescriptor: String {
+            scale == 1 ? "" : "@\(scale)x"
         }
 
-        init(d: Int, scale: Int) {
-            self.d = d
+        var description: String {
+            "\(length)x\(length)\(scaleDescriptor)"
+        }
+
+        init(length: Int, scale: Int) {
+            self.length = length
             self.scale = scale
         }
-    }
-}
 
-extension IconSet.Dimension {
-    static func * (lhs: Self, rhs: Int) -> Self {
-        Self(d: lhs.d, scale: lhs.scale * rhs)
-    }
-}
-
-extension IconSet.Dimension: ExpressibleByIntegerLiteral {
-    init(integerLiteral value: Int) {
-        self.init(d: value, scale: 1)
+        static let all: [Self] = [16, 32, 128, 256, 512].reduce(into: []) { dimensions, length in
+            dimensions.append(contentsOf: [
+                Self(length: length, scale: 1),
+                Self(length: length, scale: 2),
+            ])
+        }
     }
 }
 
 extension IconSet {
     struct Icon {
         let image: Image
-        let suffix: String
+        let dimension: Dimension
 
-        init(image: Image, dimension: Dimension) throws {
-            guard let image = image.resized(to: dimension.size) else {
-                throw CreationError.resizeFailure
-            }
+        init(image: Image, dimension: Dimension) {
             self.image = image
-            self.suffix = dimension.suffix
+            self.dimension = dimension
         }
 
         func writeInto(directory url: URL) throws {
@@ -82,8 +72,11 @@ extension IconSet {
             else {
                 throw CreationError.directoryDoesNotExist(verifier)
             }
+            guard let image = image.resized(to: dimension.size) else {
+                throw CreationError.resizeFailure
+            }
             try image.urlDestination(
-                forURL: url.appendingPathComponent("icon_" + suffix + ".png"),
+                forURL: url.appendingPathComponent("icon_\(dimension).png"),
                 type: .png
             ).write()
         }
