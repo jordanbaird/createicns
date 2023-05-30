@@ -16,7 +16,6 @@ let package = Package(
             name: "Tool",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
-                .product(name: "Prism", package: "Prism"),
                 .target(name: "Core"),
             ],
             path: "Tool"
