@@ -31,8 +31,8 @@ struct CommandContext {
     /// Creates a command context with the given input path, output path,
     /// and Boolean value indicating whether the output type should be an
     /// iconset.
-    init(runner: Runner, input: String, output: String?, isIconset: Bool) {
-        let correctExtension = isIconset ? "iconset" : "icns"
+    init(runner: Runner, input: String, output: String?, isIconSet: Bool) {
+        let correctExtension = isIconSet ? "iconset" : "icns"
         let inputURL = URL(fileURLWithPath: input)
         let outputURL: URL = {
             guard let output else {

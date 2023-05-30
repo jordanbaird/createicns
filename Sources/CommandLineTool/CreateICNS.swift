@@ -18,8 +18,8 @@ struct CreateICNS: ParsableCommand {
     var input: String
     @Argument(help: .output)
     var output: String?
-    @Flag(name: .iconset, help: .isIconset)
-    var isIconset = false
+    @Flag(name: .iconSet, help: .isIconSet)
+    var isIconSet = false
 
     func run() throws {
         try Runner.run { runner in
@@ -27,10 +27,10 @@ struct CreateICNS: ParsableCommand {
                 runner: runner,
                 input: input,
                 output: output,
-                isIconset: isIconset
+                isIconSet: isIconSet
             )
 
-            if isIconset {
+            if isIconSet {
                 context.actionMessage = "Creating iconset..."
                 context.successMessage = "Iconset successfully created."
             } else {

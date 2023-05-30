@@ -19,7 +19,7 @@ extension ArgumentHelp {
         the 'icns' extension automatically added.\n
         """
 
-    static let isIconset: Self = """
+    static let isIconSet: Self = """
         Convert the input into an iconset file instead of an ICNS file. If \
         this option is present with an output, the output path's extension \
         must be 'iconset'.\n
@@ -27,5 +27,5 @@ extension ArgumentHelp {
 }
 
 extension NameSpecification {
-    static let iconset: Self = [.customShort("s"), .customLong("iconset")]
+    static let iconSet: Self = [.customShort("s"), .customLong("iconset")]
 }
