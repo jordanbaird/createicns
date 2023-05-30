@@ -84,7 +84,7 @@ public struct FileVerifier {
 
     public func verifyHasPathExtension(_ pathExtension: String) throws {
         if !hasPathExtension(pathExtension) {
-            throw VerificationError.incorrectPathExtension(url.pathExtension)
+            throw VerificationError.incorrectPathExtension(url.pathExtension, pathExtension)
         }
     }
 }
@@ -92,14 +92,14 @@ public struct FileVerifier {
 extension FileVerifier {
     public enum VerificationError: LocalizedError {
         case fileDoesNotExist(String)
-        case incorrectPathExtension(String)
+        case incorrectPathExtension(String, String)
 
         public var errorDescription: String? {
             switch self {
             case .fileDoesNotExist(let path):
                 return "File does not exist at path '\(path)'."
-            case .incorrectPathExtension(let pathExtension):
-                return "Incorrect path extension '\(pathExtension)'."
+            case .incorrectPathExtension(let pathExtension, let outputType):
+                return "Incorrect path extension '\(pathExtension)' for output type '\(outputType)'."
             }
         }
     }
