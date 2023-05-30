@@ -5,15 +5,15 @@
 
 import Foundation
 
-struct FileVerifier {
+public struct FileVerifier {
     private enum FileBase {
         case path(String)
         case url(URL)
     }
 
-    struct VerifiedResult {
-        let fileExists: Bool
-        let isDirectory: Bool
+    public struct VerifiedResult {
+        public let fileExists: Bool
+        public let isDirectory: Bool
 
         fileprivate init(path: String) {
             var isDirectory: ObjCBool = false
@@ -24,7 +24,7 @@ struct FileVerifier {
 
     private let base: FileBase
 
-    var path: String {
+    public var path: String {
         switch base {
         case .path(let path):
             return path
@@ -36,7 +36,7 @@ struct FileVerifier {
         }
     }
 
-    var url: URL {
+    public var url: URL {
         switch base {
         case .path(let path):
             guard #available(macOS 13.0, *) else {
@@ -48,15 +48,15 @@ struct FileVerifier {
         }
     }
 
-    var result: VerifiedResult {
+    public var result: VerifiedResult {
         return VerifiedResult(path: path)
     }
 
-    var fileExists: Bool {
+    public var fileExists: Bool {
         result.fileExists
     }
 
-    var isDirectory: Bool {
+    public var isDirectory: Bool {
         result.isDirectory
     }
 
@@ -64,15 +64,43 @@ struct FileVerifier {
         self.base = base
     }
 
-    init(path: String) {
+    public init(path: String) {
         self.init(base: .path(path))
     }
 
-    init(url: URL) {
+    public init(url: URL) {
         self.init(base: .url(url))
     }
 
-    func hasPathExtension(_ pathExtension: String) -> Bool {
+    public func hasPathExtension(_ pathExtension: String) -> Bool {
         url.pathExtension == pathExtension
+    }
+
+    public func verifyFileExists() throws {
+        if !fileExists {
+            throw VerificationError.fileDoesNotExist(path)
+        }
+    }
+
+    public func verifyHasPathExtension(_ pathExtension: String) throws {
+        if !hasPathExtension(pathExtension) {
+            throw VerificationError.incorrectPathExtension(url.pathExtension)
+        }
+    }
+}
+
+extension FileVerifier {
+    public enum VerificationError: LocalizedError {
+        case fileDoesNotExist(String)
+        case incorrectPathExtension(String)
+
+        public var errorDescription: String? {
+            switch self {
+            case .fileDoesNotExist(let path):
+                return "File does not exist at path '\(path)'."
+            case .incorrectPathExtension(let pathExtension):
+                return "Incorrect path extension '\(pathExtension)'."
+            }
+        }
     }
 }

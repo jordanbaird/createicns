@@ -5,9 +5,11 @@
 
 import Foundation
 import ImageIO
-import UniformTypes
 
-struct Image {
+public struct Image {
+    private enum Storage {
+        case pdfContext(CGContext)
+    }
 
     // MARK: Instance Properties
 
@@ -22,7 +24,7 @@ struct Image {
         self.drawingPrep = drawingPrep
     }
 
-    init(url: URL) throws {
+    public init(url: URL) throws {
         let type = TypeIdentifier(url: url)
 
         if !TypeIdentifier.validTypes.contains(type) {
@@ -119,11 +121,11 @@ struct Image {
 
     // MARK: Instance Methods
 
-    func dataDestination(forType type: TypeIdentifier) -> Destination<Data> {
+    public func dataDestination(forType type: TypeIdentifier) -> Destination<Data> {
         Destination.dataDestination(forImage: self, type: type)
     }
 
-    func urlDestination(forURL url: URL, type: TypeIdentifier) -> Destination<URL> {
+    public func urlDestination(forURL url: URL, type: TypeIdentifier) -> Destination<URL> {
         Destination.urlDestination(forURL: url, image: self, type: type)
     }
 
@@ -168,56 +170,56 @@ struct Image {
 
 // MARK: Image.TypeIdentifier
 extension Image {
-    struct TypeIdentifier {
-        let rawValue: String
+    public struct TypeIdentifier {
+        public let rawValue: String
 
-        init(rawValue: String) {
+        public init(rawValue: String) {
             self.rawValue = rawValue
         }
 
-        init?(value: Any) {
+        public init?(value: Any) {
             guard let rawValue = value as? String else {
                 return nil
             }
             self.init(rawValue: rawValue)
         }
 
-        init(pathExtension: String) {
-            guard let type = UniformType(tag: pathExtension, tagClass: .filenameExtension, conformingTo: nil) else {
+        public init(pathExtension: String) {
+            guard let type = UTType(tag: pathExtension, tagClass: .filenameExtension, conformingTo: nil) else {
                 self = .image
                 return
             }
             self.init(rawValue: type.identifier)
         }
 
-        init(url: URL) {
+        public init(url: URL) {
             self.init(pathExtension: url.pathExtension)
         }
 
         // MARK: Constants
 
-        static let image = Self(rawValue: UniformType.image.identifier)
+        public static let image = Self(rawValue: UTType.image.identifier)
 
-        static let bmp = Self(rawValue: UniformType.bmp.identifier)
+        public static let bmp = Self(rawValue: UTType.bmp.identifier)
 
-        static let gif = Self(rawValue: UniformType.gif.identifier)
+        public static let gif = Self(rawValue: UTType.gif.identifier)
 
-        static let jpeg = Self(rawValue: UniformType.jpeg.identifier)
+        public static let jpeg = Self(rawValue: UTType.jpeg.identifier)
 
-        static let pdf = Self(rawValue: UniformType.pdf.identifier)
+        public static let pdf = Self(rawValue: UTType.pdf.identifier)
 
-        static let png = Self(rawValue: UniformType.png.identifier)
+        public static let png = Self(rawValue: UTType.png.identifier)
 
-        static let rawImage = Self(rawValue: UniformType.rawImage.identifier)
+        public static let rawImage = Self(rawValue: UTType.rawImage.identifier)
 
         // TODO: Try to figure out a good way to do SVG.
-        // static let svg = Self(rawValue: UniformType.svg.identifier)
+        // public static let svg = Self(rawValue: UTType.svg.identifier)
 
-        static let tiff = Self(rawValue: UniformType.tiff.identifier)
+        public static let tiff = Self(rawValue: UTType.tiff.identifier)
 
-        static let webP = Self(rawValue: UniformType.webP.identifier)
+        public static let webP = Self(rawValue: UTType.webP.identifier)
 
-        static let validTypes: [Self] = {
+        public static let validTypes: [Self] = {
             let prevalidatedTypes: [Self] = [
                 .pdf,
                 .png,
@@ -241,7 +243,7 @@ extension Image.TypeIdentifier: RawRepresentable { }
 
 // MARK: Image.Destination
 extension Image {
-    struct Destination<Kind> {
+    public struct Destination<Kind> {
         private struct Base {
             private let value: Kind
 
@@ -267,9 +269,9 @@ extension Image {
 
         private let base: Base
 
-        let image: Image
+        public let image: Image
 
-        let type: TypeIdentifier
+        public let type: TypeIdentifier
 
         private init(base: Base, image: Image, type: TypeIdentifier) {
             self.base = base
@@ -281,11 +283,11 @@ extension Image {
 
 // MARK: Destination<Data>
 extension Image.Destination<Data> {
-    static func dataDestination(forImage image: Image, type: Image.TypeIdentifier) -> Self {
+    public static func dataDestination(forImage image: Image, type: Image.TypeIdentifier) -> Self {
         Self(base: Base(data: NSMutableData()), image: image, type: type)
     }
 
-    var data: Data? {
+    public var data: Data? {
         let data = base.getData()
         guard data.isEmpty else {
             return data as Data
@@ -306,11 +308,11 @@ extension Image.Destination<Data> {
 
 // MARK: Destination<URL>
 extension Image.Destination<URL> {
-    static func urlDestination(forURL url: URL, image: Image, type: Image.TypeIdentifier) -> Self {
+    public static func urlDestination(forURL url: URL, image: Image, type: Image.TypeIdentifier) -> Self {
         Self(base: Base(url: url), image: image, type: type)
     }
 
-    func write() throws {
+    public func write() throws {
         let url = base.getURL()
         let verifier = FileVerifier(url: url)
         guard !verifier.fileExists else {

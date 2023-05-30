@@ -1,30 +1,42 @@
 //
-// UniformType.swift
+// UTType.swift
 // createicns
 //
 
 import Foundation
 #if canImport(UniformTypeIdentifiers)
-import UniformTypeIdentifiers
+@_implementationOnly import UniformTypeIdentifiers
+
+@available(macOS 11.0, *)
+private typealias SystemType = UniformTypeIdentifiers.UTType
+
+@available(macOS 11.0, *)
+private typealias SystemTagClass = UniformTypeIdentifiers.UTTagClass
 #endif
 
-public struct UniformType {
+/// A structure that represents a type of data to load, send, or receive.
+public struct UTType {
 
     // MARK: Types
 
     /// A type that represents a tag class of a uniform type.
     public struct TagClass {
+        /// The raw value of the tag class.
         public let rawValue: String
 
+        /// Creates a tag class with the given raw value.
         public init(rawValue: String) {
             self.rawValue = rawValue
         }
 
+        /// Creates a tag class from the given system-defined tag class.
         @available(macOS 11.0, *)
-        fileprivate init(_utTagClass: UTTagClass) {
-            self.init(rawValue: _utTagClass.rawValue)
+        fileprivate init(systemTagClass: SystemTagClass) {
+            self.init(rawValue: systemTagClass.rawValue)
         }
 
+        /// Creates a tag class by comparing the given string against the raw values of
+        /// the tag classes defined by the system, returning `nil` if no match is found.
         fileprivate init?(normalized: String) {
             if normalized == Self.filenameExtension.rawValue {
                 self = .filenameExtension
@@ -37,17 +49,19 @@ public struct UniformType {
 
         // MARK: Standard Tag Classes
 
+        /// A type property that returns the tag class used to map a type to a filename extension.
         public static let filenameExtension: Self = {
             if #available(macOS 11.0, *) {
-                return Self(_utTagClass: .filenameExtension)
+                return Self(systemTagClass: .filenameExtension)
             } else {
                 return Self(rawValue: kUTTagClassFilenameExtension as String)
             }
         }()
 
+        /// A type property that returns the tag class used to map a type to a MIME type.
         public static let mimeType: Self = {
             if #available(macOS 11.0, *) {
-                return Self(_utTagClass: .mimeType)
+                return Self(systemTagClass: .mimeType)
             } else {
                 return Self(rawValue: kUTTagClassMIMEType as String)
             }
@@ -68,7 +82,7 @@ public struct UniformType {
     /// not both.
     public var isDeclared: Bool {
         if #available(macOS 11.0, *) {
-            return UTType(identifier)?.isDeclared ?? false
+            return SystemType(identifier)?.isDeclared ?? false
         } else {
             return UTTypeIsDeclared(identifier as CFString)
         }
@@ -84,7 +98,7 @@ public struct UniformType {
     /// not both.
     public var isDynamic: Bool {
         if #available(macOS 11.0, *) {
-            return UTType(identifier)?.isDynamic ?? false
+            return SystemType(identifier)?.isDynamic ?? false
         } else {
             return UTTypeIsDeclared(identifier as CFString)
         }
@@ -93,11 +107,11 @@ public struct UniformType {
     /// The tag specification dictionary of the type.
     public var tags: [TagClass: [String]] {
         if #available(macOS 11.0, *) {
-            guard let utType = UTType(identifier) else {
+            guard let systemType = SystemType(identifier) else {
                 return [:]
             }
-            return utType.tags.reduce(into: [:]) { spec, tag in
-                spec[TagClass(_utTagClass: tag.key)] = tag.value
+            return systemType.tags.reduce(into: [:]) { spec, pair in
+                spec[TagClass(systemTagClass: pair.key)] = pair.value
             }
         } else {
             guard
@@ -107,13 +121,13 @@ public struct UniformType {
             else {
                 return [:]
             }
-            return spec.reduce(into: [:]) { spec, tag in
-                guard let tagClass = TagClass(normalized: tag.key) else {
+            return spec.reduce(into: [:]) { spec, pair in
+                guard let tagClass = TagClass(normalized: pair.key) else {
                     return
                 }
-                if let value = tag.value as? [String] {
+                if let value = pair.value as? [String] {
                     spec[tagClass] = value
-                } else if let value = tag.value as? String {
+                } else if let value = pair.value as? String {
                     spec[tagClass] = [value]
                 } else {
                     preconditionFailure("Invalid type in tag specification.")
@@ -125,7 +139,7 @@ public struct UniformType {
     /// A localized string that describes the type.
     public var localizedDescription: String? {
         if #available(macOS 11.0, *) {
-            return UTType(identifier)?.localizedDescription
+            return SystemType(identifier)?.localizedDescription
         } else {
             guard let description = UTTypeCopyDescription(identifier as CFString) else {
                 return nil
@@ -155,16 +169,30 @@ public struct UniformType {
     /// conforms to.
     public init?(tag: String, tagClass: TagClass, conformingTo supertype: Self?) {
         if #available(macOS 11.0, *) {
-            guard let utType = UTType(tag: tag, tagClass: UTTagClass(rawValue: tagClass.rawValue), conformingTo: supertype.flatMap { UTType($0.identifier) }) else {
+            let tagClass = SystemTagClass(rawValue: tagClass.rawValue)
+            let supertype = supertype.flatMap { supertype in
+                SystemType(supertype.identifier)
+            }
+            guard let systemType = SystemType(tag: tag, tagClass: tagClass, conformingTo: supertype) else {
                 return nil
             }
-            self.init(utType.identifier)
+            self.init(systemType.identifier)
         } else {
-            guard let identifier = UTTypeCreatePreferredIdentifierForTag(tagClass.rawValue as CFString, tag as CFString, supertype?.identifier as CFString?) else {
+            let tagClass = tagClass.rawValue as CFString
+            let supertype = supertype.flatMap { supertype in
+                supertype.identifier as CFString
+            }
+            guard let identifier = UTTypeCreatePreferredIdentifierForTag(tagClass, tag as CFString, supertype) else {
                 return nil
             }
             self.init(identifier.takeRetainedValue() as String)
         }
+    }
+
+    /// Creates a type based on the given system-defined type.
+    @available(macOS 11.0, *)
+    private init(systemType: SystemType) {
+        self.init(systemType.identifier)
     }
 
     // MARK: Instance Methods
@@ -174,8 +202,8 @@ public struct UniformType {
     public func conforms(to type: Self) -> Bool {
         if #available(macOS 11.0, *) {
             guard
-                let selfType = UTType(identifier),
-                let otherType = UTType(type.identifier)
+                let selfType = SystemType(identifier),
+                let otherType = SystemType(type.identifier)
             else {
                 return false
             }
@@ -190,14 +218,15 @@ public struct UniformType {
         if #available(macOS 11.0, *) {
             switch tagClass {
             case .filenameExtension:
-                return UTType(identifier)?.preferredFilenameExtension
+                return SystemType(identifier)?.preferredFilenameExtension
             case .mimeType:
-                return UTType(identifier)?.preferredMIMEType
+                return SystemType(identifier)?.preferredMIMEType
             default:
                 return nil
             }
         } else {
-            guard let tag = UTTypeCopyPreferredTagWithClass(identifier as CFString, tagClass.rawValue as CFString) else {
+            let tagClass = tagClass.rawValue as CFString
+            guard let tag = UTTypeCopyPreferredTagWithClass(identifier as CFString, tagClass) else {
                 return nil
             }
             return tag.takeRetainedValue() as String
@@ -207,9 +236,11 @@ public struct UniformType {
     /// Returns the tags for the given tag class.
     public func allTags(with tagClass: TagClass) -> [String]? {
         if #available(macOS 11.0, *) {
-            return UTType(identifier)?.tags[UTTagClass(rawValue: tagClass.rawValue)]
+            let tagClass = SystemTagClass(rawValue: tagClass.rawValue)
+            return SystemType(identifier)?.tags[tagClass]
         } else {
-            guard let tags = UTTypeCopyAllTagsWithClass(identifier as CFString, tagClass.rawValue as CFString) else {
+            let tagClass = tagClass.rawValue as CFString
+            guard let tags = UTTypeCopyAllTagsWithClass(identifier as CFString, tagClass) else {
                 return nil
             }
             return tags.takeRetainedValue() as? [String]
@@ -217,101 +248,115 @@ public struct UniformType {
     }
 }
 
-extension UniformType {
+extension UTType {
     public static let image: Self = {
         if #available(macOS 11.0, *) {
-            return Self(UTType.image.identifier)
+            return Self(systemType: .image)
         }
         return Self(kUTTypeImage as String)
     }()
 
-    public static let png: Self = {
-        if #available(macOS 11.0, *) {
-            return Self(UTType.png.identifier)
-        }
-        return Self(kUTTypePNG as String)
-    }()
-
-    public static let gif: Self = {
-        if #available(macOS 11.0, *) {
-            return Self(UTType.gif.identifier)
-        }
-        return Self(kUTTypeGIF as String)
-    }()
-
-    public static let jpeg: Self = {
-        if #available(macOS 11.0, *) {
-            return Self(UTType.jpeg.identifier)
-        }
-        return Self(kUTTypeJPEG as String)
-    }()
-
-    public static let webP: Self = {
-        if #available(macOS 11.0, *) {
-            return Self(UTType.webP.identifier)
-        }
-        return Self("org.webmproject.webp")
-    }()
-
-    public static let tiff: Self = {
-        if #available(macOS 11.0, *) {
-            return Self(UTType.tiff.identifier)
-        }
-        return Self(kUTTypeTIFF as String)
-    }()
-
     public static let bmp: Self = {
         if #available(macOS 11.0, *) {
-            return Self(UTType.bmp.identifier)
+            return Self(systemType: .bmp)
         }
         return Self(kUTTypeBMP as String)
     }()
 
-    public static let svg: Self = {
+    public static let gif: Self = {
         if #available(macOS 11.0, *) {
-            return Self(UTType.svg.identifier)
+            return Self(systemType: .gif)
         }
-        return Self(kUTTypeScalableVectorGraphics as String)
+        return Self(kUTTypeGIF as String)
     }()
 
-    public static let rawImage: Self = {
+    public static let icns: Self = {
         if #available(macOS 11.0, *) {
-            return Self(UTType.rawImage.identifier)
+            return Self(systemType: .icns)
         }
-        return Self(kUTTypeRawImage as String)
+        return Self(kUTTypeAppleICNS as String)
+    }()
+
+    public static let ico: Self = {
+        if #available(macOS 11.0, *) {
+            return Self(systemType: .ico)
+        }
+        return Self(kUTTypeICO as String)
+    }()
+
+    public static let jpeg: Self = {
+        if #available(macOS 11.0, *) {
+            return Self(systemType: .jpeg)
+        }
+        return Self(kUTTypeJPEG as String)
     }()
 
     public static let pdf: Self = {
         if #available(macOS 11.0, *) {
-            return Self(UTType.pdf.identifier)
+            return Self(systemType: .pdf)
         }
         return Self(kUTTypePDF as String)
     }()
+
+    public static let png: Self = {
+        if #available(macOS 11.0, *) {
+            return Self(systemType: .png)
+        }
+        return Self(kUTTypePNG as String)
+    }()
+
+    public static let rawImage: Self = {
+        if #available(macOS 11.0, *) {
+            return Self(systemType: .rawImage)
+        }
+        return Self(kUTTypeRawImage as String)
+    }()
+
+    public static let svg: Self = {
+        if #available(macOS 11.0, *) {
+            return Self(systemType: .svg)
+        }
+        return Self(kUTTypeScalableVectorGraphics as String)
+    }()
+
+    public static let tiff: Self = {
+        if #available(macOS 11.0, *) {
+            return Self(systemType: .tiff)
+        }
+        return Self(kUTTypeTIFF as String)
+    }()
+
+    public static let webP: Self = {
+        if #available(macOS 11.0, *) {
+            return Self(systemType: .webP)
+        }
+        return Self("org.webmproject.webp")
+    }()
 }
 
-// MARK: UniformType: CustomStringConvertible
-extension UniformType: CustomStringConvertible {
+// MARK: UTType: CustomStringConvertible
+extension UTType: CustomStringConvertible {
     public var description: String {
         identifier
     }
 }
 
-// MARK: UniformType: Equatable
-extension UniformType: Equatable {
+// MARK: UTType: Equatable
+extension UTType: Equatable {
     public static func == (lhs: Self, rhs: Self) -> Bool {
         if #available(macOS 11.0, *) {
-            return UTType(lhs.identifier) == UTType(rhs.identifier)
+            return SystemType(lhs.identifier) == SystemType(rhs.identifier)
         } else {
             return UTTypeEqual(lhs.identifier as CFString, rhs.identifier as CFString)
         }
     }
 }
 
-// MARK: UniformType: Hashable
-extension UniformType: Hashable {
+// MARK: UTType: Hashable
+extension UTType: Hashable {
     public func hash(into hasher: inout Hasher) {
         if #available(macOS 11.0, *) {
-            hasher.combine(UTType(identifier))
+            hasher.combine(SystemType(identifier))
         } else {
             hasher.combine(identifier as CFString)
         }
@@ -319,18 +364,18 @@ extension UniformType: Hashable {
 }
 
 // MARK: TagClass: Equatable
-extension UniformType.TagClass: Equatable {
+extension UTType.TagClass: Equatable {
     public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.rawValue == rhs.rawValue
     }
 }
 
 // MARK: TagClass: Hashable
-extension UniformType.TagClass: Hashable {
+extension UTType.TagClass: Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(rawValue)
     }
 }
 
 // MARK: TagClass: RawRepresentable
-extension UniformType.TagClass: RawRepresentable { }
+extension UTType.TagClass: RawRepresentable { }

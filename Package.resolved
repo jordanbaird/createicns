@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/jordanbaird/Prism",
       "state" : {
-        "revision" : "3dbda77f78deb13ee8ba1915857a306b607e1285",
-        "version" : "0.1.1"
+        "revision" : "3712037843b9bba341130e4e36be7662ef07e704",
+        "version" : "0.1.2"
       }
     },
     {
