@@ -17,8 +17,7 @@ let package = Package(
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .target(name: "Core"),
-            ],
-            path: "CommandLineTool"
+            ]
         ),
         .target(
             name: "Core",
