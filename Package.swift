@@ -5,7 +5,7 @@ import PackageDescription
 let package = Package(
     name: "createicns",
     products: [
-        .executable(name: "createicns", targets: ["Tool"]),
+        .executable(name: "createicns", targets: ["CommandLineTool"]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.2.2"),
@@ -13,12 +13,12 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "Tool",
+            name: "CommandLineTool",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .target(name: "Core"),
             ],
-            path: "Tool"
+            path: "CommandLineTool"
         ),
         .target(
             name: "Core",
