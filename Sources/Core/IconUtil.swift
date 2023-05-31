@@ -7,6 +7,23 @@ import Foundation
 
 /// Wraps the `iconutil` command line utility.
 class IconUtil {
+    enum IconUtilError: LocalizedError {
+        case unknownError
+        case data(Data)
+
+        var errorDescription: String? {
+            switch self {
+            case .unknownError:
+                return "An unknown error occurred."
+            case .data(let data):
+                guard let string = String(data: data, encoding: .utf8) else {
+                    return Self.unknownError.errorDescription
+                }
+                return string
+            }
+        }
+    }
+
     private let path = "/usr/bin/iconutil"
 
     let iconSet: IconSet
@@ -57,7 +74,7 @@ class IconUtil {
 
         // iconutil only returns data if something went wrong.
         if let data {
-            throw CreationError(data)
+            throw IconUtilError.data(data)
         }
 
         try FileManager.default.copyItem(at: iconURL, to: output)

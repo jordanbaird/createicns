@@ -7,9 +7,49 @@ import Foundation
 import ImageIO
 
 struct Image {
-    private enum Storage {
-        case pdfContext(CGContext)
+
+    // MARK: Types
+
+    enum ImageCreationError: LocalizedError {
+        case unknownError
+        case invalidImageFormat
+        case invalidDimensions
+        case invalidDestination
+        case alreadyExists(FileVerifier)
+
+        var errorDescription: String? {
+            switch self {
+            case .unknownError:
+                return "An unknown error occurred."
+            case .invalidImageFormat:
+                return "File is not a valid image format."
+            case .invalidDimensions:
+                return "Image width and height must be equal."
+            case .invalidDestination:
+                return "Invalid image destination."
+            case .alreadyExists(let verifier):
+                return "File at path '\(verifier.path)' already exists."
+            }
+        }
     }
+
+    // MARK: Static Properties
+
+    static let validTypes: [UTType] = {
+        let prevalidatedTypes: [UTType] = [
+            .pdf,
+            .png,
+        ]
+        let identifiers = CGImageSourceCopyTypeIdentifiers() as Array
+        let validTypes = prevalidatedTypes + identifiers.compactMap { value in
+            guard let identifier = value as? String else {
+                return nil
+            }
+            return UTType(identifier)
+        }
+        var seen = Set<UTType>()
+        return validTypes.filter { seen.insert($0).inserted }
+    }()
 
     // MARK: Instance Properties
 
@@ -25,10 +65,10 @@ struct Image {
     }
 
     init(url: URL) throws {
-        let type = TypeIdentifier(url: url)
+        let type = UTType(url: url) ?? .image
 
-        if !TypeIdentifier.validTypes.contains(type) {
-            throw CreationError.invalidImageFormat
+        if !Self.validTypes.contains(type) {
+            throw ImageCreationError.invalidImageFormat
         }
 
         switch type {
@@ -37,7 +77,7 @@ struct Image {
                 let document = CGPDFDocument(url as CFURL),
                 let page = document.page(at: 1)
             else {
-                throw CreationError.unknownError // FIXME: Need a better error.
+                throw ImageCreationError.unknownError // FIXME: Need a better error.
             }
 
             let rect = page.getBoxRect(.mediaBox)
@@ -59,7 +99,7 @@ struct Image {
                     bitmapInfo: alphaInfo
                 )
             else {
-                throw CreationError.unknownError // FIXME: Need a better error.
+                throw ImageCreationError.unknownError // FIXME: Need a better error.
             }
 
             self.init(context: context, drawingPrep: { context in
@@ -72,7 +112,7 @@ struct Image {
             })
         default:
             let options: [CFString: CFTypeRef] = [
-                kCGImageSourceTypeIdentifierHint: type.rawValue as CFString,
+                kCGImageSourceTypeIdentifierHint: type.identifier as CFString,
                 kCGImageSourceShouldCache: kCFBooleanTrue,
                 kCGImageSourceShouldAllowFloat: kCFBooleanTrue,
             ]
@@ -81,7 +121,7 @@ struct Image {
                 let source = CGImageSourceCreateWithURL(url as CFURL, options as CFDictionary),
                 let cgImage = CGImageSourceCreateImageAtIndex(source, 0, nil)
             else {
-                throw CreationError.unknownError // FIXME: Need a better error.
+                throw ImageCreationError.unknownError // FIXME: Need a better error.
             }
 
             let width = cgImage.width
@@ -102,7 +142,7 @@ struct Image {
                     bitmapInfo: bitmapInfo | alphaInfo
                 )
             else {
-                throw CreationError.unknownError // FIXME: Need a better error.
+                throw ImageCreationError.unknownError // FIXME: Need a better error.
             }
 
             self.init(context: context, drawingPrep: { context in
@@ -115,17 +155,17 @@ struct Image {
         }
 
         if context.width != context.height {
-            throw CreationError.invalidDimensions
+            throw ImageCreationError.invalidDimensions
         }
     }
 
     // MARK: Instance Methods
 
-    func dataDestination(forType type: TypeIdentifier) -> Destination<Data> {
+    func dataDestination(forType type: UTType) -> Destination<Data> {
         Destination.dataDestination(forImage: self, type: type)
     }
 
-    func urlDestination(forURL url: URL, type: TypeIdentifier) -> Destination<URL> {
+    func urlDestination(forURL url: URL, type: UTType) -> Destination<URL> {
         Destination.urlDestination(forURL: url, image: self, type: type)
     }
 
@@ -168,79 +208,6 @@ struct Image {
     }
 }
 
-// MARK: Image.TypeIdentifier
-extension Image {
-    struct TypeIdentifier {
-        let rawValue: String
-
-        init(rawValue: String) {
-            self.rawValue = rawValue
-        }
-
-        init?(value: Any) {
-            guard let rawValue = value as? String else {
-                return nil
-            }
-            self.init(rawValue: rawValue)
-        }
-
-        init(pathExtension: String) {
-            guard let type = UTType(tag: pathExtension, tagClass: .filenameExtension, conformingTo: nil) else {
-                self = .image
-                return
-            }
-            self.init(rawValue: type.identifier)
-        }
-
-        init(url: URL) {
-            self.init(pathExtension: url.pathExtension)
-        }
-
-        // MARK: Constants
-
-        static let image = Self(rawValue: UTType.image.identifier)
-
-        static let bmp = Self(rawValue: UTType.bmp.identifier)
-
-        static let gif = Self(rawValue: UTType.gif.identifier)
-
-        static let jpeg = Self(rawValue: UTType.jpeg.identifier)
-
-        static let pdf = Self(rawValue: UTType.pdf.identifier)
-
-        static let png = Self(rawValue: UTType.png.identifier)
-
-        static let rawImage = Self(rawValue: UTType.rawImage.identifier)
-
-        // TODO: Try to figure out a good way to do SVG.
-        // static let svg = Self(rawValue: UTType.svg.identifier)
-
-        static let tiff = Self(rawValue: UTType.tiff.identifier)
-
-        static let webP = Self(rawValue: UTType.webP.identifier)
-
-        static let validTypes: [Self] = {
-            let prevalidatedTypes: [Self] = [
-                .pdf,
-                .png,
-            ]
-            let identifiers = CGImageSourceCopyTypeIdentifiers() as Array
-            let validTypes = prevalidatedTypes + identifiers.compactMap { Self(value: $0) }
-            var seen = Set<Self>()
-            return validTypes.filter { seen.insert($0).inserted }
-        }()
-    }
-}
-
-// MARK: TypeIdentifier: Equatable
-extension Image.TypeIdentifier: Equatable { }
-
-// MARK: TypeIdentifier: Hashable
-extension Image.TypeIdentifier: Hashable { }
-
-// MARK: TypeIdentifier: RawRepresentable
-extension Image.TypeIdentifier: RawRepresentable { }
-
 // MARK: Image.Destination
 extension Image {
     struct Destination<Kind> {
@@ -271,9 +238,9 @@ extension Image {
 
         let image: Image
 
-        let type: TypeIdentifier
+        let type: UTType
 
-        private init(base: Base, image: Image, type: TypeIdentifier) {
+        private init(base: Base, image: Image, type: UTType) {
             self.base = base
             self.image = image
             self.type = type
@@ -283,7 +250,7 @@ extension Image {
 
 // MARK: Destination<Data>
 extension Image.Destination<Data> {
-    static func dataDestination(forImage image: Image, type: Image.TypeIdentifier) -> Self {
+    static func dataDestination(forImage image: Image, type: UTType) -> Self {
         Self(base: Base(data: NSMutableData()), image: image, type: type)
     }
 
@@ -293,7 +260,7 @@ extension Image.Destination<Data> {
             return data as Data
         }
         guard
-            let destination = CGImageDestinationCreateWithData(data, type.rawValue as CFString, 1, nil),
+            let destination = CGImageDestinationCreateWithData(data, type.identifier as CFString, 1, nil),
             let cgImage = image.makeCGImage()
         else {
             return nil
@@ -308,7 +275,7 @@ extension Image.Destination<Data> {
 
 // MARK: Destination<URL>
 extension Image.Destination<URL> {
-    static func urlDestination(forURL url: URL, image: Image, type: Image.TypeIdentifier) -> Self {
+    static func urlDestination(forURL url: URL, image: Image, type: UTType) -> Self {
         Self(base: Base(url: url), image: image, type: type)
     }
 
@@ -316,17 +283,17 @@ extension Image.Destination<URL> {
         let url = base.getURL()
         let verifier = FileVerifier(url: url)
         guard !verifier.fileExists else {
-            throw CreationError.alreadyExists(verifier)
+            throw Image.ImageCreationError.alreadyExists(verifier)
         }
-        guard let destination = CGImageDestinationCreateWithURL(url as CFURL, type.rawValue as CFString, 1, nil) else {
-            throw CreationError.invalidDestination
+        guard let destination = CGImageDestinationCreateWithURL(url as CFURL, type.identifier as CFString, 1, nil) else {
+            throw Image.ImageCreationError.invalidDestination
         }
         guard let cgImage = image.makeCGImage() else {
-            throw CreationError.unknownError // FIXME: Need a better error.
+            throw Image.ImageCreationError.unknownError // FIXME: Need a better error.
         }
         CGImageDestinationAddImage(destination, cgImage, nil)
         if !CGImageDestinationFinalize(destination) {
-            throw CreationError.invalidDestination
+            throw Image.ImageCreationError.invalidDestination
         }
     }
 }

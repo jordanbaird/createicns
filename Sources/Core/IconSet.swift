@@ -56,7 +56,16 @@ extension IconSet {
 
 extension IconSet {
     struct Icon {
+        enum IconError: String, LocalizedError {
+            case resizeFailure = "Couldn't resize icon."
+
+            var errorDescription: String? {
+                rawValue
+            }
+        }
+
         let image: Image
+
         let dimension: Dimension
 
         init(image: Image, dimension: Dimension) {
@@ -70,10 +79,10 @@ extension IconSet {
                 verifier.fileExists,
                 verifier.isDirectory
             else {
-                throw CreationError.directoryDoesNotExist(verifier)
+                throw verifier.directoryDoesNotExistError()
             }
             guard let image = image.resized(to: dimension.size) else {
-                throw CreationError.resizeFailure
+                throw IconError.resizeFailure
             }
             try image.urlDestination(
                 forURL: url.appendingPathComponent("icon_\(dimension).png"),

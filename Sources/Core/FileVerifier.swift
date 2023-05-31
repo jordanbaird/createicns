@@ -48,10 +48,6 @@ struct FileVerifier {
         }
     }
 
-    var fileType: UTType? {
-        UTType(url: url)
-    }
-
     var result: VerifiedResult {
         return VerifiedResult(path: path)
     }
@@ -77,31 +73,64 @@ struct FileVerifier {
     }
 
     func isFileType(_ fileType: UTType) -> Bool {
-        self.fileType == fileType
+        UTType(url: url) == fileType
     }
 
-    func verifyFileExists() throws {
-        if !fileExists {
-            throw VerificationError.fileDoesNotExist(path)
-        }
+    // MARK: Errors
+
+    func fileAlreadyExistsError() -> some Error {
+        VerificationError.fileAlreadyExists(path)
     }
 
-    func verifyIsFileType(_ fileType: UTType) throws {
-        if !isFileType(fileType) {
-            throw VerificationError.incorrectPathExtension(url.pathExtension, fileType)
-        }
+    func fileDoesNotExistError() -> some Error {
+        VerificationError.fileDoesNotExist(path)
+    }
+
+    func directoryDoesNotExistError() -> some Error {
+        VerificationError.directoryDoesNotExist(path)
+    }
+
+    func invalidInputPathError() -> some Error {
+        VerificationError.invalidInputPath(path, isDirectory)
+    }
+
+    func invalidOutputPathError() -> some Error {
+        VerificationError.invalidOutputPath(path, isDirectory)
+    }
+
+    func incorrectPathExtensionError(for fileType: UTType) -> some Error {
+        VerificationError.incorrectPathExtension(url.pathExtension, fileType)
     }
 }
 
+// MARK: VerificationError
 extension FileVerifier {
     enum VerificationError: LocalizedError {
+        case fileAlreadyExists(String)
         case fileDoesNotExist(String)
+        case directoryDoesNotExist(String)
+        case invalidInputPath(String, Bool)
+        case invalidOutputPath(String, Bool)
         case incorrectPathExtension(String, UTType)
 
         var errorDescription: String? {
             switch self {
+            case .fileAlreadyExists(let path):
+                return "File at path '\(path)' already exists."
             case .fileDoesNotExist(let path):
                 return "File does not exist at path '\(path)'."
+            case .directoryDoesNotExist(let path):
+                return "Directory does not exist at path '\(path)'."
+            case .invalidInputPath(let path, let isDirectory):
+                if isDirectory {
+                    return "Input path cannot be a directory: '\(path)'."
+                }
+                return "Invalid input path '\(path)'."
+            case .invalidOutputPath(let path, let isDirectory):
+                if isDirectory {
+                    return "Output path cannot be a directory: '\(path)'."
+                }
+                return "Invalid output path '\(path)'."
             case .incorrectPathExtension(let pathExtension, let outputType):
                 let start = "Incorrect path extension '\(pathExtension)' "
                 if let type = outputType.preferredFilenameExtension {
