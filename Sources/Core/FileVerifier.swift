@@ -5,15 +5,15 @@
 
 import Foundation
 
-public struct FileVerifier {
+struct FileVerifier {
     private enum FileBase {
         case path(String)
         case url(URL)
     }
 
-    public struct VerifiedResult {
-        public let fileExists: Bool
-        public let isDirectory: Bool
+    struct VerifiedResult {
+        let fileExists: Bool
+        let isDirectory: Bool
 
         fileprivate init(path: String) {
             var isDirectory: ObjCBool = false
@@ -24,7 +24,7 @@ public struct FileVerifier {
 
     private let base: FileBase
 
-    public var path: String {
+    var path: String {
         switch base {
         case .path(let path):
             return path
@@ -36,7 +36,7 @@ public struct FileVerifier {
         }
     }
 
-    public var url: URL {
+    var url: URL {
         switch base {
         case .path(let path):
             guard #available(macOS 13.0, *) else {
@@ -48,19 +48,19 @@ public struct FileVerifier {
         }
     }
 
-    public var fileType: UTType? {
+    var fileType: UTType? {
         UTType(url: url)
     }
 
-    public var result: VerifiedResult {
+    var result: VerifiedResult {
         return VerifiedResult(path: path)
     }
 
-    public var fileExists: Bool {
+    var fileExists: Bool {
         result.fileExists
     }
 
-    public var isDirectory: Bool {
+    var isDirectory: Bool {
         result.isDirectory
     }
 
@@ -68,25 +68,25 @@ public struct FileVerifier {
         self.base = base
     }
 
-    public init(path: String) {
+    init(path: String) {
         self.init(base: .path(path))
     }
 
-    public init(url: URL) {
+    init(url: URL) {
         self.init(base: .url(url))
     }
 
-    public func isFileType(_ fileType: UTType) -> Bool {
+    func isFileType(_ fileType: UTType) -> Bool {
         self.fileType == fileType
     }
 
-    public func verifyFileExists() throws {
+    func verifyFileExists() throws {
         if !fileExists {
             throw VerificationError.fileDoesNotExist(path)
         }
     }
 
-    public func verifyIsFileType(_ fileType: UTType) throws {
+    func verifyIsFileType(_ fileType: UTType) throws {
         if !isFileType(fileType) {
             throw VerificationError.incorrectPathExtension(url.pathExtension, fileType)
         }
@@ -94,11 +94,11 @@ public struct FileVerifier {
 }
 
 extension FileVerifier {
-    public enum VerificationError: LocalizedError {
+    enum VerificationError: LocalizedError {
         case fileDoesNotExist(String)
         case incorrectPathExtension(String, UTType)
 
-        public var errorDescription: String? {
+        var errorDescription: String? {
             switch self {
             case .fileDoesNotExist(let path):
                 return "File does not exist at path '\(path)'."

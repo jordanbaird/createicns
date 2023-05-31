@@ -22,24 +22,10 @@ struct CreateICNS: ParsableCommand {
     var isIconSet = false
 
     func run() throws {
-        try Runner.run { runner in
-            var context = CommandContext(
-                runner: runner,
-                input: input,
-                output: output,
-                isIconSet: isIconSet
-            )
-
-            if isIconSet {
-                context.actionMessage = "Creating iconset..."
-                context.successMessage = "Iconset successfully created."
-            } else {
-                context.actionMessage = "Creating icon..."
-                context.successMessage = "Icon successfully created."
-                context.iconSetWriter = .iconUtil
-            }
-
-            try context.run()
-        }
+        try CommandContext(
+            input: input,
+            output: output,
+            isIconSet: isIconSet
+        ).run()
     }
 }

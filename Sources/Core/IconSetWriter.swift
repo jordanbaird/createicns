@@ -6,7 +6,7 @@
 import Foundation
 
 /// A type that writes an iconset to an output url.
-public enum IconSetWriter {
+enum IconSetWriter {
     /// The iconset is written directly to the output url in the form of an ICNS file.
     case direct
 
@@ -16,7 +16,7 @@ public enum IconSetWriter {
 
     /// Writes the given iconset to the given output url using the method specified
     /// by this writer.
-    public func write(iconSet: IconSet, outputURL: URL) throws {
+    func write(iconSet: IconSet, outputURL: URL) throws {
         switch self {
         case .direct:
             try iconSet.write(to: outputURL)

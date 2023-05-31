@@ -3,13 +3,26 @@
 // createicns
 //
 
-import Core
 import Foundation
+import Prism
 
-// TODO: Combine CommandContext and Runner.
-struct CommandContext {
-    /// The runner that manages the output of the context.
-    let runner: Runner
+/// A context that manages the execution and output of the command.
+public final class CommandContext {
+    /// An error that may be thrown during the operations of a ``CommandContext``.
+    struct RunError: LocalizedError {
+        /// The underlying error.
+        let error: Error
+
+        /// Creates a runner error with an underlying error.
+        init(error: Error) {
+            self.error = error
+        }
+
+        /// A description of the underlying error, printed in red.
+        var errorDescription: String? {
+            error.localizedDescription.foregroundColor(.red)
+        }
+    }
 
     /// The correct file type to use for the user's chosen output type.
     let correctFileType: UTType
@@ -21,18 +34,34 @@ struct CommandContext {
     let outputURL: URL
 
     /// A message to print before the context begins verification.
-    var actionMessage: String?
+    let actionMessage: String
 
     /// A message to print after a successful run of the context.
-    var successMessage: String?
+    let successMessage: String
 
     /// An object that writes an iconset to the context's output.
-    var iconSetWriter = IconSetWriter.direct
+    let iconSetWriter: IconSetWriter
 
     /// Creates a command context with the given input path, output path, and
     /// Boolean value indicating whether the output type should be an iconset.
-    init(runner: Runner, input: String, output: String?, isIconSet: Bool) {
-        let correctFileType: UTType = isIconSet ? .iconSet : .icns
+    public init(input: String, output: String?, isIconSet: Bool) {
+        let correctFileType: UTType
+        let actionMessage: String
+        let successMessage: String
+        let iconSetWriter: IconSetWriter
+
+        if isIconSet {
+            correctFileType = .iconSet
+            actionMessage = "Creating iconset..."
+            successMessage = "Iconset successfully created."
+            iconSetWriter = .direct
+        } else {
+            correctFileType = .icns
+            actionMessage = "Creating icon..."
+            successMessage = "Icon successfully created."
+            iconSetWriter = .iconUtil
+        }
+
         let inputURL = URL(fileURLWithPath: input)
         let outputURL: URL = {
             guard let output else {
@@ -44,12 +73,17 @@ struct CommandContext {
             }
             return URL(fileURLWithPath: output)
         }()
-        self.runner = runner
+
         self.correctFileType = correctFileType
         self.inputURL = inputURL
         self.outputURL = outputURL
+        self.actionMessage = actionMessage
+        self.successMessage = successMessage
+        self.iconSetWriter = iconSetWriter
     }
 
+    /// Ensures that the input and output urls of the context are valid, throwing
+    /// the appropriate error if not.
     private func verifyInputAndOutput() throws {
         let inputVerifier = FileVerifier(url: inputURL)
         try inputVerifier.verifyFileExists()
@@ -75,17 +109,25 @@ struct CommandContext {
         try iconSetWriter.write(iconSet: iconSet, outputURL: outputURL)
     }
 
+    /// Executes the given closure, intercepting any thrown error and wrapping it
+    /// in a `RunError`, which will be printed to stderr in red.
+    private func runInterceptingError<T>(_ body: () throws -> T) rethrows -> T {
+        do {
+            return try body()
+        } catch {
+            throw RunError(error: error)
+        }
+    }
+
     /// Prints the context's action message, then ensures the context's input and
     /// output are both valid before creating an iconset from the context's input
     /// url and writing the resulting images to the context's output url.
-    func run() throws {
-        if let actionMessage {
-            runner.print(actionMessage)
-        }
-        try verifyInputAndOutput()
-        try write()
-        if let successMessage {
-            runner.print(successMessage, color: .green)
+    public func run() throws {
+        try runInterceptingError {
+            print(actionMessage)
+            try verifyInputAndOutput()
+            try write()
+            print(successMessage.foregroundColor(.green))
         }
     }
 }

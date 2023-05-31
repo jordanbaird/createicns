@@ -6,16 +6,16 @@
 import Foundation
 
 /// Wraps the `iconutil` command line utility.
-public class IconUtil {
+class IconUtil {
     private let path = "/usr/bin/iconutil"
 
-    public let iconSet: IconSet
+    let iconSet: IconSet
 
-    public init(iconSet: IconSet) {
+    init(iconSet: IconSet) {
         self.iconSet = iconSet
     }
 
-    public func run(writingTo output: URL) throws {
+    func run(writingTo output: URL) throws {
         let tempURL = try FileManager.default.url(
             for: .itemReplacementDirectory,
             in: .userDomainMask,
