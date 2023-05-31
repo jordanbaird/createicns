@@ -10,32 +10,64 @@ struct Image {
 
     // MARK: Types
 
-    enum ImageCreationError: LocalizedError {
-        case unknownError
+    private enum ContextDefaults {
+        static let bitsPerComponent: Int = 8
+
+        static let colorSpace: CGColorSpace = CGColorSpace(name: CGColorSpace.sRGB)!
+
+        static let bitmapInfo = CGBitmapInfo.byteOrderDefault
+
+        static let alphaInfo = CGImageAlphaInfo.premultipliedLast
+
+        static func makeContext(size: CGSize) throws -> CGContext {
+            guard let context = CGContext(
+                data: nil,
+                width: Int(size.width),
+                height: Int(size.height),
+                bitsPerComponent: bitsPerComponent,
+                bytesPerRow: 0,
+                space: colorSpace,
+                bitmapInfo: bitmapInfo.rawValue | alphaInfo.rawValue)
+            else {
+                throw ImageCreationError.graphicsContextError
+            }
+            return context
+        }
+    }
+
+    private enum ImageCreationError: LocalizedError {
+        case graphicsContextError
+        case pdfDocumentError
         case invalidImageFormat
         case invalidDimensions
+        case invalidData
+        case invalidSource
         case invalidDestination
-        case alreadyExists(FileVerifier)
 
         var errorDescription: String? {
+            let base = "Could not create image: "
             switch self {
-            case .unknownError:
-                return "An unknown error occurred."
+            case .graphicsContextError:
+                return base + "Error with graphics context."
+            case .pdfDocumentError:
+                return base + "Error with PDF document."
             case .invalidImageFormat:
-                return "File is not a valid image format."
+                return base + "File is not a valid image format."
             case .invalidDimensions:
-                return "Image width and height must be equal."
+                return base + "Image width and height must be equal."
+            case .invalidData:
+                return base + "Invalid image data."
+            case .invalidSource:
+                return base + "Invalid image source."
             case .invalidDestination:
-                return "Invalid image destination."
-            case .alreadyExists(let verifier):
-                return "File at path '\(verifier.path)' already exists."
+                return base + "Invalid image destination."
             }
         }
     }
 
     // MARK: Static Properties
 
-    static let validTypes: [UTType] = {
+    private static let validTypes: [UTType] = {
         let prevalidatedTypes: [UTType] = [
             .pdf,
             .png,
@@ -53,15 +85,12 @@ struct Image {
 
     // MARK: Instance Properties
 
-    private let context: CGContext
-
-    private let drawingPrep: (CGContext) -> Bool
+    private let _makeCGImage: () throws -> CGImage
 
     // MARK: Initializers
 
-    private init(context: CGContext, drawingPrep: @escaping (CGContext) -> Bool) {
-        self.context = context
-        self.drawingPrep = drawingPrep
+    private init(makeCGImage: @escaping () throws -> CGImage) {
+        self._makeCGImage = makeCGImage
     }
 
     init(url: URL) throws {
@@ -73,89 +102,37 @@ struct Image {
 
         switch type {
         case .pdf:
-            guard
-                let document = CGPDFDocument(url as CFURL),
-                let page = document.page(at: 1)
-            else {
-                throw ImageCreationError.unknownError // FIXME: Need a better error.
-            }
-
-            let rect = page.getBoxRect(.mediaBox)
-
-            let width = Int(rect.width)
-            let height = Int(rect.height)
-
-            let alphaInfo = CGImageAlphaInfo.premultipliedLast.rawValue
-
-            guard
-                let colorSpace = CGColorSpace(name: CGColorSpace.sRGB),
-                let context = CGContext(
-                    data: nil,
-                    width: width,
-                    height: height,
-                    bitsPerComponent: 8,
-                    bytesPerRow: 0,
-                    space: colorSpace,
-                    bitmapInfo: alphaInfo
-                )
-            else {
-                throw ImageCreationError.unknownError // FIXME: Need a better error.
-            }
-
-            self.init(context: context, drawingPrep: { context in
-                context.setAllowsAntialiasing(true)
-                context.setShouldAntialias(true)
-                context.interpolationQuality = .high
+            self.init(makeCGImage: {
+                guard
+                    let document = CGPDFDocument(url as CFURL),
+                    let page = document.page(at: 1)
+                else {
+                    throw ImageCreationError.pdfDocumentError
+                }
+                let rect = page.getBoxRect(.mediaBox)
+                let context = try ContextDefaults.makeContext(size: rect.size)
                 context.clear(rect)
                 context.drawPDFPage(page)
-                return true
+                guard let image = context.makeImage() else {
+                    throw ImageCreationError.graphicsContextError
+                }
+                return image
             })
         default:
-            let options: [CFString: CFTypeRef] = [
-                kCGImageSourceTypeIdentifierHint: type.identifier as CFString,
-                kCGImageSourceShouldCache: kCFBooleanTrue,
-                kCGImageSourceShouldAllowFloat: kCFBooleanTrue,
-            ]
-
-            guard
-                let source = CGImageSourceCreateWithURL(url as CFURL, options as CFDictionary),
-                let cgImage = CGImageSourceCreateImageAtIndex(source, 0, nil)
-            else {
-                throw ImageCreationError.unknownError // FIXME: Need a better error.
-            }
-
-            let width = cgImage.width
-            let height = cgImage.height
-
-            let bitmapInfo = CGBitmapInfo.byteOrderDefault.rawValue
-            let alphaInfo = CGImageAlphaInfo.premultipliedLast.rawValue
-
-            guard
-                let colorSpace = cgImage.colorSpace,
-                let context = CGContext(
-                    data: nil,
-                    width: width,
-                    height: height,
-                    bitsPerComponent: 8,
-                    bytesPerRow: 0,
-                    space: colorSpace,
-                    bitmapInfo: bitmapInfo | alphaInfo
-                )
-            else {
-                throw ImageCreationError.unknownError // FIXME: Need a better error.
-            }
-
-            self.init(context: context, drawingPrep: { context in
-                context.setAllowsAntialiasing(true)
-                context.setShouldAntialias(true)
-                context.interpolationQuality = .high
-                context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
-                return true
+            self.init(makeCGImage: {
+                let options: [CFString: CFTypeRef] = [
+                    kCGImageSourceTypeIdentifierHint: type.identifier as CFString,
+                    kCGImageSourceShouldCache: kCFBooleanTrue,
+                    kCGImageSourceShouldAllowFloat: kCFBooleanTrue,
+                ]
+                guard
+                    let source = CGImageSourceCreateWithURL(url as CFURL, options as CFDictionary),
+                    let cgImage = CGImageSourceCreateImageAtIndex(source, 0, options as CFDictionary)
+                else {
+                    throw ImageCreationError.invalidSource
+                }
+                return cgImage
             })
-        }
-
-        if context.width != context.height {
-            throw ImageCreationError.invalidDimensions
         }
     }
 
@@ -169,41 +146,28 @@ struct Image {
         Destination.urlDestination(forURL: url, image: self, type: type)
     }
 
-    func makeCGImage() -> CGImage? {
-        guard drawingPrep(context) else {
-            return nil
+    func makeCGImage() throws -> CGImage {
+        let image = try _makeCGImage()
+        guard image.width == image.height else {
+            throw ImageCreationError.invalidDimensions
         }
-        return context.makeImage()
+        return image
     }
 
-    func resized(to size: CGSize) -> Self? {
-        let width = Int(size.width)
-        let height = Int(size.height)
-
-        guard
-            let colorSpace = context.colorSpace,
-            let context = CGContext(
-                data: nil,
-                width: width,
-                height: height,
-                bitsPerComponent: context.bitsPerComponent,
-                bytesPerRow: 0,
-                space: colorSpace,
-                bitmapInfo: context.bitmapInfo.rawValue | context.alphaInfo.rawValue
-            )
-        else {
-            return nil
-        }
-
-        return Self(context: context, drawingPrep: { context in
-            guard let cgImage = makeCGImage() else {
-                return false
+    func resized(to size: CGSize) -> Self {
+        Self(makeCGImage: {
+            let context = try ContextDefaults.makeContext(size: size)
+            let oldImage = try makeCGImage()
+            // CGContext will have converted size's width and height into integers.
+            // Create a new size based on the values in the context to be sure we
+            // don't cut off the edges of the new image.
+            let sizeIntegral = CGSize(width: context.width, height: context.height)
+            let rect = CGRect(origin: .zero, size: sizeIntegral)
+            context.draw(oldImage, in: rect)
+            guard let cgImage = context.makeImage() else {
+                throw ImageCreationError.graphicsContextError
             }
-            context.setAllowsAntialiasing(true)
-            context.setShouldAntialias(true)
-            context.interpolationQuality = .high
-            context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
-            return true
+            return cgImage
         })
     }
 }
@@ -240,6 +204,10 @@ extension Image {
 
         let type: UTType
 
+        private var typeIdentifier: CFString {
+            type.identifier as CFString
+        }
+
         private init(base: Base, image: Image, type: UTType) {
             self.base = base
             self.image = image
@@ -254,20 +222,18 @@ extension Image.Destination<Data> {
         Self(base: Base(data: NSMutableData()), image: image, type: type)
     }
 
-    var data: Data? {
+    func makeData() throws -> Data {
         let data = base.getData()
         guard data.isEmpty else {
-            return data as Data
+            throw Image.ImageCreationError.invalidData
         }
-        guard
-            let destination = CGImageDestinationCreateWithData(data, type.identifier as CFString, 1, nil),
-            let cgImage = image.makeCGImage()
-        else {
-            return nil
+        guard let destination = CGImageDestinationCreateWithData(data, typeIdentifier, 1, nil) else {
+            throw Image.ImageCreationError.invalidDestination
         }
+        let cgImage = try image.makeCGImage()
         CGImageDestinationAddImage(destination, cgImage, nil)
         guard CGImageDestinationFinalize(destination) else {
-            return nil
+            throw Image.ImageCreationError.invalidDestination
         }
         return data as Data
     }
@@ -283,14 +249,12 @@ extension Image.Destination<URL> {
         let url = base.getURL()
         let verifier = FileVerifier(url: url)
         guard !verifier.fileExists else {
-            throw Image.ImageCreationError.alreadyExists(verifier)
+            throw verifier.fileAlreadyExistsError()
         }
-        guard let destination = CGImageDestinationCreateWithURL(url as CFURL, type.identifier as CFString, 1, nil) else {
+        guard let destination = CGImageDestinationCreateWithURL(url as CFURL, typeIdentifier, 1, nil) else {
             throw Image.ImageCreationError.invalidDestination
         }
-        guard let cgImage = image.makeCGImage() else {
-            throw Image.ImageCreationError.unknownError // FIXME: Need a better error.
-        }
+        let cgImage = try image.makeCGImage()
         CGImageDestinationAddImage(destination, cgImage, nil)
         if !CGImageDestinationFinalize(destination) {
             throw Image.ImageCreationError.invalidDestination
