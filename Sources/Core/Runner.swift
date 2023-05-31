@@ -6,6 +6,7 @@
 import Foundation
 import Prism
 
+// TODO: Combine CommandContext and Runner.
 /// A type that manages the execution and output of a command.
 public final class Runner {
     /// The runner's output file.

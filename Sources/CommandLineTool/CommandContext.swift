@@ -6,12 +6,13 @@
 import Core
 import Foundation
 
+// TODO: Combine CommandContext and Runner.
 struct CommandContext {
     /// The runner that manages the output of the context.
     let runner: Runner
 
-    /// The correct extension to use for the user's chosen output type.
-    let correctExtension: String
+    /// The correct file type to use for the user's chosen output type.
+    let correctFileType: UTType
 
     /// The url that is used to create the iconset.
     let inputURL: URL
@@ -28,20 +29,23 @@ struct CommandContext {
     /// An object that writes an iconset to the context's output.
     var iconSetWriter = IconSetWriter.direct
 
-    /// Creates a command context with the given input path, output path,
-    /// and Boolean value indicating whether the output type should be an
-    /// iconset.
+    /// Creates a command context with the given input path, output path, and
+    /// Boolean value indicating whether the output type should be an iconset.
     init(runner: Runner, input: String, output: String?, isIconSet: Bool) {
-        let correctExtension = isIconSet ? "iconset" : "icns"
+        let correctFileType: UTType = isIconSet ? .iconSet : .icns
         let inputURL = URL(fileURLWithPath: input)
         let outputURL: URL = {
             guard let output else {
-                return inputURL.deletingPathExtension().appendingPathExtension(correctExtension)
+                let inputDeletingExtension = inputURL.deletingPathExtension()
+                if let correctExtension = correctFileType.preferredFilenameExtension {
+                    return inputDeletingExtension.appendingPathExtension(correctExtension)
+                }
+                return inputDeletingExtension
             }
             return URL(fileURLWithPath: output)
         }()
         self.runner = runner
-        self.correctExtension = correctExtension
+        self.correctFileType = correctFileType
         self.inputURL = inputURL
         self.outputURL = outputURL
     }
@@ -60,7 +64,7 @@ struct CommandContext {
         if outputVerifier.isDirectory {
             throw CreationError.badOutput(outputVerifier)
         }
-        try outputVerifier.verifyHasPathExtension(correctExtension)
+        try outputVerifier.verifyIsFileType(correctFileType)
     }
 
     /// Creates an iconset from the context's input url, and writes the resulting

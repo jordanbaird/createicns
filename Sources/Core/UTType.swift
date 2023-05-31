@@ -165,8 +165,7 @@ public struct UTType {
         self.identifier = identifier
     }
 
-    /// Creates a type based on a tag, a tag class, and a supertype that it
-    /// conforms to.
+    /// Creates a type based on a tag, a tag class, and a supertype that it conforms to.
     public init?(tag: String, tagClass: TagClass, conformingTo supertype: Self?) {
         if #available(macOS 11.0, *) {
             let tagClass = SystemTagClass(rawValue: tagClass.rawValue)
@@ -189,6 +188,17 @@ public struct UTType {
         }
     }
 
+    /// Creates a type based on the path extension of the given url, ensuring that
+    /// it conforms to the given supertype.
+    ///
+    /// If a type cannot be created from the path extension, or if a type can be created,
+    /// but does not conform to the specified supertype, this initializer returns `nil`.
+    /// If no supertype is specified, the requirement that the created type conform to a
+    /// supertype is ignored.
+    public init?(url: URL, conformingTo supertype: Self? = nil) {
+        self.init(tag: url.pathExtension, tagClass: .filenameExtension, conformingTo: supertype)
+    }
+
     /// Creates a type based on the given system-defined type.
     @available(macOS 11.0, *)
     private init(systemType: SystemType) {
@@ -197,8 +207,7 @@ public struct UTType {
 
     // MARK: Instance Methods
 
-    /// Returns a Boolean value indicating whether this type conforms to
-    /// another type.
+    /// Returns a Boolean value indicating whether this type conforms to another type.
     public func conforms(to type: Self) -> Bool {
         if #available(macOS 11.0, *) {
             guard
@@ -276,6 +285,8 @@ extension UTType {
         }
         return Self(kUTTypeAppleICNS as String)
     }()
+
+    public static let iconSet = Self("com.apple.iconset")
 
     public static let ico: Self = {
         if #available(macOS 11.0, *) {

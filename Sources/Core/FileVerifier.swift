@@ -48,6 +48,10 @@ public struct FileVerifier {
         }
     }
 
+    public var fileType: UTType? {
+        UTType(url: url)
+    }
+
     public var result: VerifiedResult {
         return VerifiedResult(path: path)
     }
@@ -72,8 +76,8 @@ public struct FileVerifier {
         self.init(base: .url(url))
     }
 
-    public func hasPathExtension(_ pathExtension: String) -> Bool {
-        url.pathExtension == pathExtension
+    public func isFileType(_ fileType: UTType) -> Bool {
+        self.fileType == fileType
     }
 
     public func verifyFileExists() throws {
@@ -82,9 +86,9 @@ public struct FileVerifier {
         }
     }
 
-    public func verifyHasPathExtension(_ pathExtension: String) throws {
-        if !hasPathExtension(pathExtension) {
-            throw VerificationError.incorrectPathExtension(url.pathExtension, pathExtension)
+    public func verifyIsFileType(_ fileType: UTType) throws {
+        if !isFileType(fileType) {
+            throw VerificationError.incorrectPathExtension(url.pathExtension, fileType)
         }
     }
 }
@@ -92,14 +96,18 @@ public struct FileVerifier {
 extension FileVerifier {
     public enum VerificationError: LocalizedError {
         case fileDoesNotExist(String)
-        case incorrectPathExtension(String, String)
+        case incorrectPathExtension(String, UTType)
 
         public var errorDescription: String? {
             switch self {
             case .fileDoesNotExist(let path):
                 return "File does not exist at path '\(path)'."
             case .incorrectPathExtension(let pathExtension, let outputType):
-                return "Incorrect path extension '\(pathExtension)' for output type '\(outputType)'."
+                let start = "Incorrect path extension '\(pathExtension)' "
+                if let type = outputType.preferredFilenameExtension {
+                    return start + "for expected output type '\(type)'."
+                }
+                return start + "for unknown output type."
             }
         }
     }
