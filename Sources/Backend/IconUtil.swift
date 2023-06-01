@@ -24,7 +24,8 @@ class IconUtil {
         }
     }
 
-    private let path = "/usr/bin/iconutil"
+    private let env = "/usr/bin/env"
+    private let command = "iconutil"
 
     let iconSet: IconSet
 
@@ -49,14 +50,14 @@ class IconUtil {
 
         process.standardOutput = pipe
         process.standardError = pipe
-        process.arguments = ["-c", "icns", iconSetURL.lastPathComponent]
+        process.arguments = [command, "-c", "icns", iconSetURL.lastPathComponent]
 
         if #available(macOS 10.13, *) {
-            process.executableURL = URL(fileURLWithPath: path)
+            process.executableURL = URL(fileURLWithPath: env)
             process.currentDirectoryURL = tempURL
             try process.run()
         } else {
-            process.launchPath = path
+            process.launchPath = env
             process.currentDirectoryPath = tempURL.path
             process.launch()
         }
