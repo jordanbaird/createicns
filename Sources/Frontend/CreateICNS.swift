@@ -4,7 +4,7 @@
 //
 
 import ArgumentParser
-import Core
+import Backend
 
 @main
 struct CreateICNS: ParsableCommand {
