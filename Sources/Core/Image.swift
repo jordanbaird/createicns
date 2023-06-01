@@ -55,6 +55,10 @@ struct Image {
         }
     }
 
+    private class Context {
+        var cgImage: CGImage?
+    }
+
     // MARK: Static Properties
 
     private static let validTypes: [UTType] = {
@@ -74,6 +78,8 @@ struct Image {
     }()
 
     // MARK: Instance Properties
+
+    private let context = Context()
 
     private let _makeCGImage: () throws -> CGImage
 
@@ -136,12 +142,20 @@ struct Image {
         Destination.urlDestination(forURL: url, image: self, type: type)
     }
 
-    func makeCGImage() throws -> CGImage {
-        let image = try _makeCGImage()
-        guard image.width == image.height else {
+    private func makeCGImage() throws -> CGImage {
+        let cgImage: CGImage = try {
+            if let cgImage = context.cgImage {
+                return cgImage
+            } else {
+                let cgImage = try _makeCGImage()
+                context.cgImage = cgImage
+                return cgImage
+            }
+        }()
+        guard cgImage.width == cgImage.height else {
             throw ImageCreationError.invalidDimensions
         }
-        return image
+        return cgImage
     }
 
     func resized(to size: CGSize) -> Self {
