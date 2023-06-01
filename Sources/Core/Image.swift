@@ -105,9 +105,21 @@ struct Image {
                 else {
                     throw ImageCreationError.pdfDocumentError
                 }
-                let rect = page.getBoxRect(.mediaBox)
-                let context = try ContextDefaults.makeContext(size: rect.size)
-                context.clear(rect)
+                let mediaBox = page.getBoxRect(.mediaBox)
+                // Scale down images that are > 4x the size of the largest image we need to produce.
+                let maxDimension: CGFloat = 1024 * 4
+                var scaleFactor = maxDimension / min(mediaBox.width, mediaBox.height)
+                if scaleFactor > 2 {
+                    scaleFactor = CGFloat(Int(scaleFactor / 2)) * 2
+                } else if scaleFactor > 1 {
+                    scaleFactor.round()
+                } else {
+                    scaleFactor = CGFloat(Int(scaleFactor * 10)) / 10
+                }
+                let destRect = mediaBox.applying(CGAffineTransform(scaleX: scaleFactor, y: scaleFactor))
+                let context = try ContextDefaults.makeContext(size: destRect.size)
+                context.scaleBy(x: scaleFactor, y: scaleFactor)
+                context.clear(destRect)
                 context.drawPDFPage(page)
                 guard let image = context.makeImage() else {
                     throw ImageCreationError.graphicsContextError
