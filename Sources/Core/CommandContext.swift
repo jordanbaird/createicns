@@ -4,12 +4,11 @@
 //
 
 import Foundation
-import Prism
 
 /// A context that manages the execution and output of the command.
 public final class CommandContext {
     /// An error that may be thrown during the operations of a ``CommandContext``.
-    struct RunError: LocalizedError {
+    struct RunError: FormattedError {
         /// The underlying error.
         let error: Error
 
@@ -18,9 +17,11 @@ public final class CommandContext {
             self.error = error
         }
 
-        /// A description of the underlying error, printed in red.
-        var errorDescription: String? {
-            error.localizedDescription.foregroundColor(.red)
+        var components: [any FormattingComponent] {
+            if let error = error as? FormattedError {
+                return [Red(components: error.components)]
+            }
+            return [Red(error.localizedDescription)]
         }
     }
 
@@ -132,7 +133,7 @@ public final class CommandContext {
             print(actionMessage)
             try verifyInputAndOutput()
             try write()
-            print(successMessage.foregroundColor(.green))
+            print(Green(successMessage).format())
         }
     }
 }

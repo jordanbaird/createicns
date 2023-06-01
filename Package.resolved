@@ -1,15 +1,6 @@
 {
   "pins" : [
     {
-      "identity" : "prism",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/jordanbaird/Prism",
-      "state" : {
-        "revision" : "3712037843b9bba341130e4e36be7662ef07e704",
-        "version" : "0.1.2"
-      }
-    },
-    {
       "identity" : "swift-argument-parser",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-argument-parser",
