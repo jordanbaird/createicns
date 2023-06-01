@@ -98,8 +98,8 @@ struct FileVerifier {
         VerificationError.invalidOutputPath(path, isDirectory)
     }
 
-    func incorrectPathExtensionError(for fileType: UTType) -> some Error {
-        VerificationError.incorrectPathExtension(url.pathExtension, fileType)
+    func invalidPathExtensionError(for fileType: UTType) -> some Error {
+        VerificationError.invalidPathExtension(url.pathExtension, fileType)
     }
 }
 
@@ -111,7 +111,7 @@ extension FileVerifier {
         case directoryDoesNotExist(String)
         case invalidInputPath(String, Bool)
         case invalidOutputPath(String, Bool)
-        case incorrectPathExtension(String, UTType)
+        case invalidPathExtension(String, UTType)
 
         var errorDescription: String? {
             switch self {
@@ -131,8 +131,8 @@ extension FileVerifier {
                     return "Output path cannot be a directory: '\(path)'."
                 }
                 return "Invalid output path '\(path)'."
-            case .incorrectPathExtension(let pathExtension, let outputType):
                 let start = "Incorrect path extension '\(pathExtension)' "
+            case .invalidPathExtension(let pathExtension, let outputType):
                 if let type = outputType.preferredFilenameExtension {
                     return start + "for expected output type '\(type)'."
                 }

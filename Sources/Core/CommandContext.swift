@@ -102,7 +102,7 @@ public final class CommandContext {
         }
 
         if !outputVerifier.isFileType(correctFileType) {
-            throw outputVerifier.incorrectPathExtensionError(for: correctFileType)
+            throw outputVerifier.invalidPathExtensionError(for: correctFileType)
         }
     }
 
