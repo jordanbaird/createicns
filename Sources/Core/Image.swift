@@ -35,33 +35,23 @@ struct Image {
         }
     }
 
-    private enum ImageCreationError: LocalizedError {
-        case graphicsContextError
-        case pdfDocumentError
-        case invalidImageFormat
-        case invalidDimensions
-        case invalidData
-        case invalidSource
-        case invalidDestination
+    private enum ImageCreationError: String, FormattedError {
+        case graphicsContextError = "Error with graphics context."
+        case pdfDocumentError = "Error with PDF document."
+        case invalidImageFormat = "File is not a valid image format."
+        case invalidDimensions = "Image width and height must be equal."
+        case invalidData = "Invalid image data."
+        case invalidSource = "Invalid image source."
+        case invalidDestination = "Invalid image destination."
 
-        var errorDescription: String? {
-            let base = "Could not create image: "
-            switch self {
-            case .graphicsContextError:
-                return base + "Error with graphics context."
-            case .pdfDocumentError:
-                return base + "Error with PDF document."
-            case .invalidImageFormat:
-                return base + "File is not a valid image format."
-            case .invalidDimensions:
-                return base + "Image width and height must be equal."
-            case .invalidData:
-                return base + "Invalid image data."
-            case .invalidSource:
-                return base + "Invalid image source."
-            case .invalidDestination:
-                return base + "Invalid image destination."
-            }
+        var components: [any FormattingComponent] {
+            [
+                Passthrough("Could not create image"),
+                StripFormatting(components: [
+                    Passthrough(" — "),
+                    Bold(rawValue),
+                ]),
+            ]
         }
     }
 

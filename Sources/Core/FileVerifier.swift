@@ -105,7 +105,7 @@ struct FileVerifier {
 
 // MARK: VerificationError
 extension FileVerifier {
-    enum VerificationError: LocalizedError {
+    enum VerificationError: FormattedError {
         case fileAlreadyExists(String)
         case fileDoesNotExist(String)
         case directoryDoesNotExist(String)
@@ -113,30 +113,74 @@ extension FileVerifier {
         case invalidOutputPath(String, Bool)
         case invalidPathExtension(String, UTType)
 
-        var errorDescription: String? {
+        var components: [any FormattingComponent] {
             switch self {
             case .fileAlreadyExists(let path):
-                return "File at path '\(path)' already exists."
+                return [
+                    StripFormatting(components: [
+                        Passthrough("File at path '"),
+                        Red(path),
+                        Passthrough("' already exists"),
+                    ]),
+                ]
             case .fileDoesNotExist(let path):
-                return "File does not exist at path '\(path)'."
+                return [
+                    StripFormatting(components: [
+                        Passthrough("File does not exist at path '"),
+                        Red(path),
+                        Passthrough("'"),
+                    ]),
+                ]
             case .directoryDoesNotExist(let path):
-                return "Directory does not exist at path '\(path)'."
+                return [
+                    StripFormatting(components: [
+                        Passthrough("Directory does not exist at path '"),
+                        Red(path),
+                        Passthrough("'"),
+                    ])
+                ]
             case .invalidInputPath(let path, let isDirectory):
                 if isDirectory {
-                    return "Input path cannot be a directory: '\(path)'."
+                    return [
+                        Passthrough("Input path"),
+                        StripFormatting([" '", path, "' "]),
+                        Passthrough("cannot be a directory."),
+                    ]
                 }
-                return "Invalid input path '\(path)'."
+                return [
+                    Passthrough("Invalid input path "),
+                    StripFormatting(["'", path, "'"]),
+                ]
             case .invalidOutputPath(let path, let isDirectory):
                 if isDirectory {
-                    return "Output path cannot be a directory: '\(path)'."
+                    return [
+                        Passthrough("Output path"),
+                        StripFormatting([" '", path, "' "]),
+                        Passthrough("cannot be a directory."),
+                    ]
                 }
-                return "Invalid output path '\(path)'."
-                let start = "Incorrect path extension '\(pathExtension)' "
+                return [
+                    Passthrough("Invalid output path "),
+                    StripFormatting(["'", path, "'"]),
+                ]
             case .invalidPathExtension(let pathExtension, let outputType):
+                var components: [any FormattingComponent] = [
+                    StripFormatting(components: [
+                        Passthrough("Invalid path extension '"),
+                        Red(Bold(pathExtension)),
+                        Passthrough("' "),
+                    ]),
+                ]
                 if let type = outputType.preferredFilenameExtension {
-                    return start + "for expected output type '\(type)'."
+                    components.append(StripFormatting(components: [
+                        Passthrough("for expected output type '"),
+                        Cyan(Bold(type)),
+                        Passthrough("'"),
+                    ]))
+                } else {
+                    components.append(StripFormatting("for unknown output type."))
                 }
-                return start + "for unknown output type."
+                return components
             }
         }
     }
