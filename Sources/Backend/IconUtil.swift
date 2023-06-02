@@ -7,7 +7,7 @@ import Foundation
 
 /// Wraps the `iconutil` command line utility.
 class IconUtil {
-    enum IconUtilError: LocalizedError {
+    private enum IconUtilError: LocalizedError {
         case unknownError
         case data(Data)
 
@@ -24,9 +24,6 @@ class IconUtil {
         }
     }
 
-    private let env = "/usr/bin/env"
-    private let command = "iconutil"
-
     let iconSet: IconSet
 
     init(iconSet: IconSet) {
@@ -40,17 +37,36 @@ class IconUtil {
             appropriateFor: output,
             create: true
         )
+
+        defer {
+            do {
+                try FileManager.default.removeItem(at: tempURL)
+            } catch {
+                print(
+                    """
+                    \("Warning:", color: .yellow, style: .bold) \
+                    failed to remove temporary directory — \
+                    \("Reason:", color: .yellow, style: .bold) \
+                    \(error.localizedDescription, color: .red)
+                    """
+                )
+            }
+        }
+
         let iconSetURL = tempURL.appendingPathComponent("icon.iconset")
         let iconURL = tempURL.appendingPathComponent("icon.icns")
 
         try iconSet.write(to: iconSetURL)
 
+        let command = "iconutil"
         let process = Process()
         let pipe = Pipe()
 
         process.standardOutput = pipe
         process.standardError = pipe
         process.arguments = [command, "-c", "icns", iconSetURL.lastPathComponent]
+
+        let env = "/usr/bin/env"
 
         if #available(macOS 10.13, *) {
             process.executableURL = URL(fileURLWithPath: env)
@@ -79,6 +95,5 @@ class IconUtil {
         }
 
         try FileManager.default.copyItem(at: iconURL, to: output)
-        try FileManager.default.removeItem(at: tempURL)
     }
 }
