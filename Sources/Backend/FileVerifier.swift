@@ -105,7 +105,7 @@ struct FileVerifier {
 
 // MARK: VerificationError
 extension FileVerifier {
-    enum VerificationError: FormattedError {
+    enum VerificationError: LocalizedError {
         case fileAlreadyExists(String)
         case fileDoesNotExist(String)
         case directoryDoesNotExist(String)
@@ -113,74 +113,32 @@ extension FileVerifier {
         case invalidOutputPath(String, Bool)
         case invalidPathExtension(String, UTType)
 
-        var components: [any FormattingComponent] {
+        var errorDescription: String? {
             switch self {
             case .fileAlreadyExists(let path):
-                return [
-                    StripFormatting(components: [
-                        Passthrough("File at path '"),
-                        Red(path),
-                        Passthrough("' already exists"),
-                    ]),
-                ]
+                return "File '\(path, color: .yellow)' already exists"
             case .fileDoesNotExist(let path):
-                return [
-                    StripFormatting(components: [
-                        Passthrough("File does not exist at path '"),
-                        Red(path),
-                        Passthrough("'"),
-                    ]),
-                ]
+                return "Didn't find valid file at path '\(path, color: .yellow)'"
             case .directoryDoesNotExist(let path):
-                return [
-                    StripFormatting(components: [
-                        Passthrough("Directory does not exist at path '"),
-                        Red(path),
-                        Passthrough("'"),
-                    ])
-                ]
+                return "Didn't find valid directory at path '\(path, color: .yellow)'"
             case .invalidInputPath(let path, let isDirectory):
                 if isDirectory {
-                    return [
-                        Passthrough("Input path"),
-                        StripFormatting([" '", path, "' "]),
-                        Passthrough("cannot be a directory."),
-                    ]
+                    return "Input path '\(path, color: .yellow)' is a directory"
                 }
-                return [
-                    Passthrough("Invalid input path "),
-                    StripFormatting(["'", path, "'"]),
-                ]
+                return "Invalid input path '\(path, color: .yellow)'"
             case .invalidOutputPath(let path, let isDirectory):
                 if isDirectory {
-                    return [
-                        Passthrough("Output path"),
-                        StripFormatting([" '", path, "' "]),
-                        Passthrough("cannot be a directory."),
-                    ]
+                    return "Output path '\(path, color: .yellow)' is a directory"
                 }
-                return [
-                    Passthrough("Invalid output path "),
-                    StripFormatting(["'", path, "'"]),
-                ]
+                return "Invalid output path '\(path, color: .yellow)'"
             case .invalidPathExtension(let pathExtension, let outputType):
-                var components: [any FormattingComponent] = [
-                    StripFormatting(components: [
-                        Passthrough("Invalid path extension '"),
-                        Red(Bold(pathExtension)),
-                        Passthrough("' "),
-                    ]),
-                ]
+                var result = "Invalid path extension '\(pathExtension, color: .yellow, style: .bold)' "
                 if let type = outputType.preferredFilenameExtension {
-                    components.append(StripFormatting(components: [
-                        Passthrough("for expected output type '"),
-                        Cyan(Bold(type)),
-                        Passthrough("'"),
-                    ]))
+                    result.append("for expected output type '\(type, color: .cyan, style: .bold)'")
                 } else {
-                    components.append(StripFormatting("for unknown output type."))
+                    result.append("for unknown output type")
                 }
-                return components
+                return result
             }
         }
     }

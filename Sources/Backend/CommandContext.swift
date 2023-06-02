@@ -8,7 +8,7 @@ import Foundation
 /// A context that manages the execution and output of the command.
 public final class CommandContext {
     /// An error that may be thrown during the operations of a ``CommandContext``.
-    struct RunError: FormattedError {
+    struct RunError: LocalizedError {
         /// The underlying error.
         let error: Error
 
@@ -17,11 +17,8 @@ public final class CommandContext {
             self.error = error
         }
 
-        var components: [any FormattingComponent] {
-            if let error = error as? FormattedError {
-                return [Red(components: error.components)]
-            }
-            return [Red(error.localizedDescription)]
+        var errorDescription: String? {
+            error.localizedDescription
         }
     }
 
@@ -133,7 +130,7 @@ public final class CommandContext {
             print(actionMessage)
             try verifyInputAndOutput()
             try write()
-            print(Green(successMessage).format())
+            print(String(formatting: successMessage, color: .green))
         }
     }
 }
