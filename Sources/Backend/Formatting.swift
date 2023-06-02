@@ -16,61 +16,69 @@ enum TextOutputStyle {
     case `default`
 }
 
-struct TextOutputFormatter {
-    private let onCodes: [String]
-    private let offCodes: [String]
-
-    init(color: TextOutputColor, style: TextOutputStyle) {
-        let colorCodes: (on: String, off: String) = {
-            switch color {
-            case .red:
-                return ("\u{001B}[31m", "\u{001B}[0m")
-            case .green:
-                return ("\u{001B}[32m", "\u{001B}[0m")
-            case .yellow:
-                return ("\u{001B}[33m", "\u{001B}[0m")
-            case .cyan:
-                return ("\u{001B}[36m", "\u{001B}[0m")
-            case .`default`:
-                return ("\u{001B}[39m", "")
-            }
-        }()
-        let styleCodes: (on: String, off: String) = {
-            switch style {
-            case .bold:
-                return ("\u{001B}[1m", "\u{001B}[22m")
-            case .default:
-                return ("", "")
-            }
-        }()
-        self.onCodes = [styleCodes.on, colorCodes.on]
-        self.offCodes = [colorCodes.off, styleCodes.off]
+private extension TextOutputColor {
+    var onCode: String {
+        switch self {
+        case .red:
+            return "\u{001B}[31m"
+        case .green:
+            return "\u{001B}[32m"
+        case .yellow:
+            return "\u{001B}[33m"
+        case .cyan:
+            return "\u{001B}[36m"
+        case .`default`:
+            return "\u{001B}[39m"
+        }
     }
 
-    func format(_ string: String) -> String {
-        "\(onCodes.joined())\(string)\(offCodes.joined())"
+    var offCode: String {
+        switch self {
+        case .red, .green, .yellow, .cyan:
+            return "\u{001B}[0m"
+        case .`default`:
+            return ""
+        }
+    }
+}
+
+private extension TextOutputStyle {
+    var onCode: String {
+        switch self {
+        case .bold:
+            return "\u{001B}[1m"
+        case .default:
+            return ""
+        }
     }
 
-    func format<Value: CustomStringConvertible>(describing value: Value) -> String {
-        format(String(describing: value))
-    }
-
-    func format<Value>(describing value: Value) -> String {
-        format(String(describing: value))
+    var offCode: String {
+        switch self {
+        case .bold:
+            return "\u{001B}[22m"
+        case .default:
+            return ""
+        }
     }
 }
 
 extension String {
+    private init(string: String, color: TextOutputColor, style: TextOutputStyle) {
+        self = [
+            style.onCode,
+            color.onCode,
+            string,
+            color.offCode,
+            style.offCode,
+        ].joined()
+    }
+
     init<Value: CustomStringConvertible>(
         formatting value: Value,
         color: TextOutputColor = .default,
         style: TextOutputStyle = .default
     ) {
-        self = TextOutputFormatter(
-            color: color,
-            style: style
-        )
-        .format(describing: value)
+        self.init(string: String(describing: value), color: color, style: style)
     }
 
     init<Value>(
@@ -78,11 +86,7 @@ extension String {
         color: TextOutputColor = .default,
         style: TextOutputStyle = .default
     ) {
-        self = TextOutputFormatter(
-            color: color,
-            style: style
-        )
-        .format(describing: value)
+        self.init(string: String(describing: value), color: color, style: style)
     }
 }
 
