@@ -24,15 +24,17 @@ class IconUtil {
 
     let iconSet: IconSet
 
+    /// Creates an iconutil command for the given iconset.
     init(iconSet: IconSet) {
         self.iconSet = iconSet
     }
 
-    func run(writingTo output: URL) throws {
+    /// Writes this instance's iconset to the given output url.
+    func run(writingTo outputURL: URL) throws {
         let tempURL = try FileManager.default.url(
             for: .itemReplacementDirectory,
             in: .userDomainMask,
-            appropriateFor: output,
+            appropriateFor: outputURL,
             create: true
         )
 
@@ -41,22 +43,21 @@ class IconUtil {
 
         try iconSet.write(to: iconSetURL)
 
-        let command = "iconutil"
         let process = Process()
         let pipe = Pipe()
 
         process.standardOutput = pipe
         process.standardError = pipe
-        process.arguments = [command, "-c", "icns", iconSetURL.lastPathComponent]
+        process.arguments = ["iconutil", "-c", "icns", iconSetURL.lastPathComponent]
 
-        let env = "/usr/bin/env"
+        let envPath = "/usr/bin/env"
 
         if #available(macOS 10.13, *) {
-            process.executableURL = URL(fileURLWithPath: env)
+            process.executableURL = URL(fileURLWithPath: envPath)
             process.currentDirectoryURL = tempURL
             try process.run()
         } else {
-            process.launchPath = env
+            process.launchPath = envPath
             process.currentDirectoryPath = tempURL.path
             process.launch()
         }
@@ -77,7 +78,7 @@ class IconUtil {
             throw IconUtilError(data)
         }
 
-        try FileManager.default.copyItem(at: iconURL, to: output)
+        try FileManager.default.copyItem(at: iconURL, to: outputURL)
         try FileManager.default.removeItem(at: tempURL)
     }
 }

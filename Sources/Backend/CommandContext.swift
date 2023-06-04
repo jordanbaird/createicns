@@ -20,7 +20,7 @@ public struct CommandContext {
     let successMessage: String
 
     /// An object that writes an iconset to the context's output.
-    let iconSetWriter: IconSetWriter
+    let writer: IconSetWriter
 
     /// Creates a command context with the given input path, output path, and
     /// Boolean value indicating whether the output type should be an iconset.
@@ -28,18 +28,18 @@ public struct CommandContext {
         let fileType: FileType
         let actionMessage: String
         let successMessage: String
-        let iconSetWriter: IconSetWriter
+        let writer: IconSetWriter
 
         if isIconSet {
             fileType = .iconSet
             actionMessage = "Creating iconset..."
             successMessage = "Iconset successfully created."
-            iconSetWriter = .direct
+            writer = .direct
         } else {
             fileType = .icns
             actionMessage = "Creating icon..."
             successMessage = "Icon successfully created."
-            iconSetWriter = .iconUtil
+            writer = .iconUtil
         }
 
         let inputURL = URL(fileURLWithPath: input)
@@ -60,7 +60,7 @@ public struct CommandContext {
             .verify(url: outputURL)
         self.actionMessage = actionMessage
         self.successMessage = successMessage
-        self.iconSetWriter = iconSetWriter
+        self.writer = writer
     }
 
     /// Ensures the context's input and output are both valid before creating an
@@ -70,7 +70,7 @@ public struct CommandContext {
         print(actionMessage)
         let image = try Image(url: inputURL)
         let iconSet = IconSet(image: image)
-        try iconSetWriter.write(iconSet: iconSet, outputURL: outputURL)
+        try writer.write(iconSet, to: outputURL)
         print(FormattedText(successMessage, color: .green))
     }
 }

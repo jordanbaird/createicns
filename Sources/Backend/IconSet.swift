@@ -17,11 +17,11 @@ struct IconSet {
         }
     }
 
-    /// Writes the contents of the iconset to the given url, creating it if necessary.
-    func write(to url: URL) throws {
-        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+    /// Writes the contents of the iconset to the given output url, creating it if necessary.
+    func write(to outputURL: URL) throws {
+        try FileManager.default.createDirectory(at: outputURL, withIntermediateDirectories: true)
         for icon in icons {
-            try icon.writeInto(directory: url)
+            try icon.urlDestination(for: outputURL).write()
         }
     }
 }
@@ -73,8 +73,7 @@ extension IconSet {
         /// The image used to create the icon.
         let image: Image
 
-        /// Sizing and scaling information used to redraw the icon's image at
-        /// the required size.
+        /// Sizing and scaling information used to draw the icon's image at the required size.
         let dimension: Dimension
 
         /// Creates an icon with the given image and dimension.
@@ -83,22 +82,18 @@ extension IconSet {
             self.dimension = dimension
         }
 
-        /// Returns the appropriate output url for the icon, in relation to the
-        /// given url.
+        /// Returns the appropriate output url for the icon, in relation to the given directory.
         ///
         /// The icon's `dimension` is used to construct the icon's filename.
-        func outputURL(from url: URL) -> URL {
-            url.appendingPathComponent("icon_\(dimension).png")
+        func outputURL(for directory: URL) -> URL {
+            directory.appendingPathComponent("icon_\(dimension).png")
         }
 
-        /// Writes the icon into the given directory.
-        func writeInto(directory url: URL) throws {
-            let url = try FileVerifier(options: [.fileExists, .isDirectory])
-                .verify(url: url)
-            try image
+        /// Returns an image destination for writing the icon's data into the given directory.
+        func urlDestination(for directory: URL) -> Image.URLDestination {
+            image
                 .resized(to: dimension.size)
-                .urlDestination(forURL: outputURL(from: url), type: .png)
-                .write()
+                .urlDestination(forURL: outputURL(for: directory), type: .png)
         }
     }
 }

@@ -16,7 +16,7 @@ enum IconSetWriter {
 
     /// Writes the given iconset to the given output url using the method specified
     /// by this writer.
-    func write(iconSet: IconSet, outputURL: URL) throws {
+    func write(_ iconSet: IconSet, to outputURL: URL) throws {
         switch self {
         case .direct:
             try iconSet.write(to: outputURL)
