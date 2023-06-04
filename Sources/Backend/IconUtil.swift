@@ -5,7 +5,7 @@
 
 import Foundation
 
-/// Wraps the `iconutil` command line utility.
+/// Wraps the iconutil command line utility.
 class IconUtil {
     private struct IconUtilError: Error, CustomStringConvertible {
         let data: Data
