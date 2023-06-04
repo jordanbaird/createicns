@@ -5,8 +5,7 @@
 
 import Foundation
 
-/// A type that verifies files according to the conditions specified by a group
-/// of options.
+/// A type that verifies files according to the conditions specified by a group of options.
 struct FileVerifier {
     /// A verification payload containing a standardized path string and url.
     struct FileLocation {
@@ -27,8 +26,7 @@ struct FileVerifier {
             }
         }
 
-        /// Creates a file location from a standardized version of the given path
-        /// string.
+        /// Creates a file location from a standardized version of the given path string.
         init(path: String) {
             if #available(macOS 13.0, *) {
                 self.init(url: URL(filePath: path))
@@ -38,8 +36,8 @@ struct FileVerifier {
         }
     }
 
-    /// A type that specifies a verification to perform using information supplied
-    /// by a file verifier.
+    /// A type that specifies a verification to perform using information supplied by a
+    /// file verifier.
     struct Option {
         /// An enumeration representing an option's underlying kind.
         fileprivate enum Kind {
@@ -94,8 +92,7 @@ struct FileVerifier {
     /// The options that specify the verifications to perform.
     let options: [Option]
 
-    /// Verifies the url and path in the given file location using the verifier's
-    /// options.
+    /// Verifies the url and path in the given file location using the verifier's options.
     @discardableResult
     func verify(location: FileLocation) throws -> (url: URL, path: String) {
         lazy var status: (fileExists: Bool, isDirectory: Bool) = {
