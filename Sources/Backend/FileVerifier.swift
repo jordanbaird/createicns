@@ -18,14 +18,10 @@ struct FileVerifier {
     }
 
     private let path: String
-
+    private let url: URL
     private let fileType: UTType?
 
-    private var url: URL {
-        URL(fileURLWithPath: path)
-    }
-
-    func path(verifying options: Options) throws -> String {
+    func verify(with options: Options) throws {
         lazy var _isDirectory: ObjCBool = false
 
         lazy var fileExists = FileManager.default.fileExists(atPath: path, isDirectory: &_isDirectory)
@@ -74,20 +70,28 @@ struct FileVerifier {
                 }
             }
         }
+    }
+
+    func path(verifying options: Options) throws -> String {
+        try verify(with: options)
         return path
     }
 
     func url(verifying options: Options) throws -> URL {
-        try URL(fileURLWithPath: path(verifying: options))
+        try verify(with: options)
+        return url
     }
 
-    init(path: String, expectedFileType fileType: UTType? = nil) {
+    init(path: String, fileType: UTType? = nil) {
         self.path = path
+        self.url = URL(fileURLWithPath: path)
         self.fileType = fileType
     }
 
-    init(url: URL, expectedFileType fileType: UTType? = nil) {
-        self.init(path: url.path, expectedFileType: fileType)
+    init(url: URL, fileType: UTType? = nil) {
+        self.path = url.path
+        self.url = url
+        self.fileType = fileType
     }
 }
 

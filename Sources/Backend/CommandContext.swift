@@ -68,10 +68,10 @@ public struct CommandContext {
     /// Ensures that the input and output urls of the context are valid, throwing
     /// the appropriate error if not.
     private func verifyInputAndOutput() throws {
-        let inputVerifier = FileVerifier(url: inputURL)
-        let outputVerifier = FileVerifier(url: outputURL, expectedFileType: correctFileType)
-        _ = try inputVerifier.path(verifying: [.fileExists, .isNotDirectory])
-        _ = try outputVerifier.path(verifying: [.fileDoesNotExist, .isNotDirectory, .isFileType])
+        try FileVerifier(url: inputURL)
+            .verify(with: [.fileExists, .isNotDirectory])
+        try FileVerifier(url: outputURL, fileType: correctFileType)
+            .verify(with: [.fileDoesNotExist, .isNotDirectory, .isFileType])
     }
 
     /// Creates an iconset from the context's input url, and writes the resulting

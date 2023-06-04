@@ -255,7 +255,8 @@ extension Image.Destination<URL> {
     }
 
     func write() throws {
-        let url = try FileVerifier(url: baseDestination.getURL()).url(verifying: .fileDoesNotExist)
+        let url = try FileVerifier(url: baseDestination.getURL())
+            .url(verifying: .fileDoesNotExist)
         guard let destination = CGImageDestinationCreateWithURL(url as CFURL, typeIdentifier, 1, nil) else {
             throw Image.ImageCreationError.invalidDestination
         }
