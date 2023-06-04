@@ -84,24 +84,9 @@ public final class CommandContext {
     /// the appropriate error if not.
     private func verifyInputAndOutput() throws {
         let inputVerifier = FileVerifier(url: inputURL)
-        let outputVerifier = FileVerifier(url: outputURL)
-
-        if !inputVerifier.fileExists {
-            throw inputVerifier.fileDoesNotExistError()
-        }
-        if outputVerifier.fileExists {
-            throw outputVerifier.fileAlreadyExistsError()
-        }
-        if inputVerifier.isDirectory {
-            throw inputVerifier.invalidInputPathError()
-        }
-        if outputVerifier.isDirectory {
-            throw outputVerifier.invalidOutputPathError()
-        }
-
-        if !outputVerifier.isFileType(correctFileType) {
-            throw outputVerifier.invalidPathExtensionError(for: correctFileType)
-        }
+        let outputVerifier = FileVerifier(url: outputURL, expectedFileType: correctFileType)
+        _ = try inputVerifier.path(verifying: [.fileExists, .isNotDirectory])
+        _ = try outputVerifier.path(verifying: [.fileDoesNotExist, .isNotDirectory, .isFileType])
     }
 
     /// Creates an iconset from the context's input url, and writes the resulting
