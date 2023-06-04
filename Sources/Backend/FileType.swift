@@ -69,6 +69,7 @@ struct FileType {
     }
 }
 
+// MARK: FileType Constants
 extension FileType {
     static let image: Self = {
         if #available(macOS 11.0, *) {

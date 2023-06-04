@@ -89,6 +89,39 @@ struct FileVerifier {
         }
     }
 
+    /// An error that can be thrown during file verification.
+    private enum VerificationError: FormattedError {
+        case alreadyExists(String)
+        case doesNotExist(String)
+        case isDirectory(String)
+        case isNotDirectory(String)
+        case invalidPathExtension(String, FileType?)
+
+        var message: FormattedText {
+            switch self {
+            case .alreadyExists(let path):
+                return "'\(path, color: .yellow)' already exists"
+            case .doesNotExist(let path):
+                return "No such file or directory '\(path, color: .yellow)'"
+            case .isDirectory(let path):
+                return "'\(path, color: .yellow)' is a directory"
+            case .isNotDirectory(let path):
+                return "'\(path, color: .yellow)' is not a directory"
+            case .invalidPathExtension(let pathExtension, let outputType):
+                var result = FormattedText("Invalid path extension '\(pathExtension, color: .yellow, style: .bold)'")
+                guard let outputType else {
+                    return result
+                }
+                if let type = outputType.preferredFilenameExtension {
+                    result.append(" for expected output type '\(type, color: .cyan, style: .bold)'")
+                } else {
+                    result.append(" for unknown output type")
+                }
+                return result
+            }
+        }
+    }
+
     /// The options that specify the verifications to perform.
     let options: [Option]
 
@@ -153,40 +186,5 @@ struct FileVerifier {
     /// Creates a verifier that verifies files using the given options.
     init(options: [Option]) {
         self.options = options
-    }
-}
-
-// MARK: VerificationError
-extension FileVerifier {
-    private enum VerificationError: FormattedError {
-        case alreadyExists(String)
-        case doesNotExist(String)
-        case isDirectory(String)
-        case isNotDirectory(String)
-        case invalidPathExtension(String, FileType?)
-
-        var message: FormattedText {
-            switch self {
-            case .alreadyExists(let path):
-                return "'\(path, color: .yellow)' already exists"
-            case .doesNotExist(let path):
-                return "No such file or directory '\(path, color: .yellow)'"
-            case .isDirectory(let path):
-                return "'\(path, color: .yellow)' is a directory"
-            case .isNotDirectory(let path):
-                return "'\(path, color: .yellow)' is not a directory"
-            case .invalidPathExtension(let pathExtension, let outputType):
-                var result = FormattedText("Invalid path extension '\(pathExtension, color: .yellow, style: .bold)'")
-                guard let outputType else {
-                    return result
-                }
-                if let type = outputType.preferredFilenameExtension {
-                    result.append(" for expected output type '\(type, color: .cyan, style: .bold)'")
-                } else {
-                    result.append(" for unknown output type")
-                }
-                return result
-            }
-        }
     }
 }

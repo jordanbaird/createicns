@@ -24,6 +24,7 @@ struct IconSet {
 }
 
 extension IconSet {
+    /// Sizing information used to create the various icons in an iconset.
     struct Dimension: CustomStringConvertible {
         let length: Int
         let scale: Int
@@ -55,6 +56,7 @@ extension IconSet {
 }
 
 extension IconSet {
+    /// Represents an individual icon in an iconset.
     struct Icon {
         let image: Image
         let dimension: Dimension

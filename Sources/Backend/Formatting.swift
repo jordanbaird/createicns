@@ -5,22 +5,17 @@
 
 import Darwin
 
-// MARK: - TextOutputColor
-
+// MARK: TextOutputColor
 /// Colors to use to format text when displayed in a command line interface.
 enum TextOutputColor {
     /// Formats the text in red.
     case red
-
     /// Formats the text in green.
     case green
-
     /// Formats the text in yellow.
     case yellow
-
     /// Formats the text in cyan.
     case cyan
-
     /// Formats the text in the default color.
     case `default`
 
@@ -49,13 +44,11 @@ enum TextOutputColor {
     }
 }
 
-// MARK: - TextOutputStyle
-
+// MARK: TextOutputStyle
 /// Styles to use to format text when displayed in a command line interface.
 enum TextOutputStyle {
     /// Formats the text in bold.
     case bold
-
     /// Formats the text in the default style.
     case `default`
 
@@ -78,8 +71,7 @@ enum TextOutputStyle {
     }
 }
 
-// MARK: - FormattingComponents
-
+// MARK: FormattingComponents
 struct FormattingComponents {
     private enum Component {
         case unformatted(String)
@@ -142,8 +134,7 @@ struct FormattingComponents {
     }
 }
 
-// MARK: - FormattedText
-
+// MARK: FormattedText
 struct FormattedText {
     /// The components that make up this text instance.
     var components: FormattingComponents
@@ -218,12 +209,12 @@ extension FormattedText: ExpressibleByStringInterpolation {
     }
 }
 
-// MARK: - FormattedError
-
+// MARK: FormattedError
 protocol FormattedError: Error, CustomStringConvertible {
     var message: FormattedText { get }
 }
 
+// MARK: FormattedError: CustomStringConvertible
 extension FormattedError {
     var description: String {
         String(describing: message)

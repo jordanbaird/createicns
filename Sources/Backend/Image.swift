@@ -6,15 +6,17 @@
 import Foundation
 import ImageIO
 
+/// A type that contains writable image data.
 struct Image {
-
-    // MARK: Types
-
+    /// Default values used to create a graphics context.
     private enum ContextDefaults {
         static let bitsPerComponent: Int = 8
         static let colorSpace: CGColorSpace = CGColorSpace(name: CGColorSpace.sRGB)!
         static let bitmapInfo = CGBitmapInfo.byteOrderDefault
         static let alphaInfo = CGImageAlphaInfo.premultipliedLast
+
+        /// Creates and returns a graphics context of the given size using the values
+        /// defined on this type.
         static func makeContext(size: CGSize) throws -> CGContext {
             guard let context = CGContext(
                 data: nil,
@@ -31,6 +33,7 @@ struct Image {
         }
     }
 
+    /// An error that can be thrown during the creation of an image.
     private enum ImageCreationError: String, FormattedError {
         case graphicsContextError = "Error with graphics context."
         case pdfDocumentError = "Error with PDF document."
@@ -45,12 +48,14 @@ struct Image {
         }
     }
 
+    /// A context for caching a Core Graphics image.
     private class Context {
         var cgImage: CGImage?
     }
 
     // MARK: Static Properties
 
+    /// The valid file types for an image.
     private static let validTypes: [FileType] = {
         let prevalidatedTypes: [FileType] = [
             .pdf,
@@ -79,6 +84,7 @@ struct Image {
         self._makeCGImage = makeCGImage
     }
 
+    /// Creates an image by reading data from the given url.
     init(url: URL) throws {
         let type = FileType(url: url) ?? .image
 
@@ -136,10 +142,12 @@ struct Image {
 
     // MARK: Instance Methods
 
+    /// Returns an image destination for writing data of the given type to the given url.
     func urlDestination(forURL url: URL, type: FileType) -> URLDestination {
         URLDestination(url: url, image: self, type: type)
     }
 
+    /// Returns a Core Graphics image from this image.
     private func makeCGImage() throws -> CGImage {
         let cgImage: CGImage = try {
             if let cgImage = context.cgImage {
@@ -156,6 +164,7 @@ struct Image {
         return cgImage
     }
 
+    /// Returns an image that is resized to the given size when it is drawn.
     func resized(to size: CGSize) -> Self {
         Self(makeCGImage: {
             let context = try ContextDefaults.makeContext(size: size)
