@@ -35,7 +35,7 @@ struct Image {
         }
     }
 
-    private enum ImageCreationError: String, LocalizedError {
+    private enum ImageCreationError: String, FormattedError {
         case graphicsContextError = "Error with graphics context."
         case pdfDocumentError = "Error with PDF document."
         case invalidImageFormat = "File is not a valid image format."
@@ -44,7 +44,7 @@ struct Image {
         case invalidSource = "Invalid image source."
         case invalidDestination = "Invalid image destination."
 
-        var errorDescription: String? {
+        var message: FormattedText {
             "\("Could not create image", color: .red) — \(rawValue, style: .bold)"
         }
     }

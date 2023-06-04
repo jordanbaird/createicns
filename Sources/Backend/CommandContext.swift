@@ -130,7 +130,7 @@ public final class CommandContext {
             print(actionMessage)
             try verifyInputAndOutput()
             try write()
-            print(String(formatting: successMessage, color: .green))
+            print(FormattedText(successMessage, color: .green))
         }
     }
 }

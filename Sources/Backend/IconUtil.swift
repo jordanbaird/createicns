@@ -7,17 +7,21 @@ import Foundation
 
 /// Wraps the `iconutil` command line utility.
 class IconUtil {
-    private enum IconUtilError: LocalizedError {
+    private enum IconUtilError: Error, CustomStringConvertible {
         case unknownError
         case data(Data)
 
-        var errorDescription: String? {
+        var description: String {
+            var unknownErrorDescription: String {
+                "An unknown error occurred."
+            }
+
             switch self {
             case .unknownError:
-                return "An unknown error occurred."
+                return unknownErrorDescription
             case .data(let data):
                 guard let string = String(data: data, encoding: .utf8) else {
-                    return Self.unknownError.errorDescription
+                    return unknownErrorDescription
                 }
                 return string
             }
@@ -37,21 +41,6 @@ class IconUtil {
             appropriateFor: output,
             create: true
         )
-
-        defer {
-            do {
-                try FileManager.default.removeItem(at: tempURL)
-            } catch {
-                print(
-                    """
-                    \("Warning:", color: .yellow, style: .bold) \
-                    failed to remove temporary directory — \
-                    \("Reason:", color: .yellow, style: .bold) \
-                    \(error.localizedDescription, color: .red)
-                    """
-                )
-            }
-        }
 
         let iconSetURL = tempURL.appendingPathComponent("icon.iconset")
         let iconURL = tempURL.appendingPathComponent("icon.icns")
@@ -95,5 +84,6 @@ class IconUtil {
         }
 
         try FileManager.default.copyItem(at: iconURL, to: output)
+        try FileManager.default.removeItem(at: tempURL)
     }
 }
