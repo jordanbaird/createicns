@@ -5,7 +5,7 @@
 
 import Foundation
 
-/// A context that manages the execution and output of the command.
+/// A context that manages the execution and output of the createicns tool.
 public struct CommandContext {
     /// The url that is used to create the iconset.
     let inputURL: URL
