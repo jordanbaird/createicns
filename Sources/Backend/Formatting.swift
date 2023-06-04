@@ -6,6 +6,7 @@
 import Darwin
 
 // MARK: TextOutputColor
+
 /// Colors to use to format text when displayed in a command line interface.
 enum TextOutputColor {
     /// Formats the text in red.
@@ -45,6 +46,7 @@ enum TextOutputColor {
 }
 
 // MARK: TextOutputStyle
+
 /// Styles to use to format text when displayed in a command line interface.
 enum TextOutputStyle {
     /// Formats the text in bold.
@@ -72,6 +74,8 @@ enum TextOutputStyle {
 }
 
 // MARK: FormattingComponents
+
+/// Components used to build a `FormattedText` instance.
 struct FormattingComponents {
     private enum Component {
         case unformatted(String)
@@ -135,6 +139,9 @@ struct FormattingComponents {
 }
 
 // MARK: FormattedText
+
+/// Text that is displayed in a formatted representation when printed to a
+/// command line interface.
 struct FormattedText {
     /// The components that make up this text instance.
     var components: FormattingComponents
@@ -210,7 +217,14 @@ extension FormattedText: ExpressibleByStringInterpolation {
 }
 
 // MARK: FormattedError
+
+/// An error type that is displayed in a formatted representation when printed
+/// to a command line interface.
 protocol FormattedError: Error, CustomStringConvertible {
+    /// The formatted message to display.
+    ///
+    /// If one of either standard output or standard error does not point to a
+    /// terminal, the message is displayed without formatting.
     var message: FormattedText { get }
 }
 
