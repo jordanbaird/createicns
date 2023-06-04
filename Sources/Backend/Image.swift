@@ -12,13 +12,9 @@ struct Image {
 
     private enum ContextDefaults {
         static let bitsPerComponent: Int = 8
-
         static let colorSpace: CGColorSpace = CGColorSpace(name: CGColorSpace.sRGB)!
-
         static let bitmapInfo = CGBitmapInfo.byteOrderDefault
-
         static let alphaInfo = CGImageAlphaInfo.premultipliedLast
-
         static func makeContext(size: CGSize) throws -> CGContext {
             guard let context = CGContext(
                 data: nil,
@@ -168,15 +164,18 @@ struct Image {
         Self(makeCGImage: {
             let context = try ContextDefaults.makeContext(size: size)
             let oldImage = try makeCGImage()
-            // CGContext will have converted size's width and height into integers.
-            // Create a new size based on the values in the context to be sure we
-            // don't cut off the edges of the new image.
+
+            // Create a new size from the values in the context to be sure we don't
+            // cut off the edges of the new image.
             let sizeIntegral = CGSize(width: context.width, height: context.height)
+
             let rect = CGRect(origin: .zero, size: sizeIntegral)
             context.draw(oldImage, in: rect)
+
             guard let cgImage = context.makeImage() else {
                 throw ImageCreationError.graphicsContextError
             }
+
             return cgImage
         })
     }
@@ -185,7 +184,7 @@ struct Image {
 // MARK: Image.Destination
 extension Image {
     struct Destination<Kind> {
-        private struct Base {
+        private struct BaseDestination {
             private let value: Kind
 
             init(data: NSMutableData) where Kind == Data {
@@ -208,20 +207,20 @@ extension Image {
             }
         }
 
-        private let base: Base
-
         let image: Image
 
         let type: UTType
+
+        private let baseDestination: BaseDestination
 
         private var typeIdentifier: CFString {
             type.identifier as CFString
         }
 
-        private init(base: Base, image: Image, type: UTType) {
-            self.base = base
+        private init(image: Image, type: UTType, baseDestination: BaseDestination) {
             self.image = image
             self.type = type
+            self.baseDestination = baseDestination
         }
     }
 }
@@ -229,11 +228,11 @@ extension Image {
 // MARK: Destination<Data>
 extension Image.Destination<Data> {
     static func dataDestination(forImage image: Image, type: UTType) -> Self {
-        Self(base: Base(data: NSMutableData()), image: image, type: type)
+        Self(image: image, type: type, baseDestination: BaseDestination(data: NSMutableData()))
     }
 
     func makeData() throws -> Data {
-        let data = base.getData()
+        let data = baseDestination.getData()
         guard data.isEmpty else {
             throw Image.ImageCreationError.invalidData
         }
@@ -252,7 +251,7 @@ extension Image.Destination<Data> {
 // MARK: Destination<URL>
 extension Image.Destination<URL> {
     static func urlDestination(forURL url: URL, image: Image, type: UTType) -> Self {
-        Self(base: Base(url: url), image: image, type: type)
+        Self(image: image, type: type, baseDestination: BaseDestination(url: url))
     }
 
     func write() throws {

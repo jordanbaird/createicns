@@ -18,7 +18,7 @@ struct CreateICNS: ParsableCommand {
     var input: String
     @Argument(help: .output)
     var output: String?
-    @Flag(name: .iconSet, help: .isIconSet)
+    @Flag(name: .isIconSet, help: .isIconSet)
     var isIconSet = false
 
     func run() throws {

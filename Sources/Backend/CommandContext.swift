@@ -6,22 +6,7 @@
 import Foundation
 
 /// A context that manages the execution and output of the command.
-public final class CommandContext {
-    /// An error that may be thrown during the operations of a ``CommandContext``.
-    struct RunError: LocalizedError {
-        /// The underlying error.
-        let error: Error
-
-        /// Creates a runner error with an underlying error.
-        init(error: Error) {
-            self.error = error
-        }
-
-        var errorDescription: String? {
-            error.localizedDescription
-        }
-    }
-
+public struct CommandContext {
     /// The correct file type to use for the user's chosen output type.
     let correctFileType: UTType
 
@@ -97,25 +82,13 @@ public final class CommandContext {
         try iconSetWriter.write(iconSet: iconSet, outputURL: outputURL)
     }
 
-    /// Executes the given closure, intercepting any thrown error and wrapping it
-    /// in a `RunError`, which will be printed to stderr in red.
-    private func runInterceptingError<T>(_ body: () throws -> T) rethrows -> T {
-        do {
-            return try body()
-        } catch {
-            throw RunError(error: error)
-        }
-    }
-
-    /// Prints the context's action message, then ensures the context's input and
-    /// output are both valid before creating an iconset from the context's input
-    /// url and writing the resulting images to the context's output url.
+    /// Ensures the context's input and output are both valid before creating an
+    /// iconset from the context's input url and writing the resulting images to
+    /// the context's output url.
     public func run() throws {
-        try runInterceptingError {
-            print(actionMessage)
-            try verifyInputAndOutput()
-            try write()
-            print(FormattedText(successMessage, color: .green))
-        }
+        try verifyInputAndOutput()
+        print(actionMessage)
+        try write()
+        print(FormattedText(successMessage, color: .green))
     }
 }

@@ -27,5 +27,5 @@ extension ArgumentHelp {
 }
 
 extension NameSpecification {
-    static let iconSet: Self = [.customShort("s"), .customLong("iconset")]
+    static let isIconSet: Self = [.customShort("s"), .customLong("iconset")]
 }

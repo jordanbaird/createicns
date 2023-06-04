@@ -32,12 +32,12 @@ extension IconSet {
             CGSize(width: length * scale, height: length * scale)
         }
 
-        var scaleDescriptor: String {
+        var scaleDescription: String {
             scale == 1 ? "" : "@\(scale)x"
         }
 
         var description: String {
-            "\(length)x\(length)\(scaleDescriptor)"
+            "\(length)x\(length)\(scaleDescription)"
         }
 
         init(length: Int, scale: Int) {
@@ -57,7 +57,6 @@ extension IconSet {
 extension IconSet {
     struct Icon {
         let image: Image
-
         let dimension: Dimension
 
         init(image: Image, dimension: Dimension) {
@@ -65,7 +64,7 @@ extension IconSet {
             self.dimension = dimension
         }
 
-        private func outputURL(from url: URL) -> URL {
+        func outputURL(from url: URL) -> URL {
             url.appendingPathComponent("icon_\(dimension).png")
         }
 
