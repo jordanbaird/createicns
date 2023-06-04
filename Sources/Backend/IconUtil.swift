@@ -7,24 +7,18 @@ import Foundation
 
 /// Wraps the `iconutil` command line utility.
 class IconUtil {
-    private enum IconUtilError: Error, CustomStringConvertible {
-        case unknownError
-        case data(Data)
+    private struct IconUtilError: Error, CustomStringConvertible {
+        let data: Data
+
+        init(_ data: Data) {
+            self.data = data
+        }
 
         var description: String {
-            var unknownErrorDescription: String {
-                "An unknown error occurred."
+            guard let string = String(data: data, encoding: .utf8) else {
+                return "An unknown error occurred."
             }
-
-            switch self {
-            case .unknownError:
-                return unknownErrorDescription
-            case .data(let data):
-                guard let string = String(data: data, encoding: .utf8) else {
-                    return unknownErrorDescription
-                }
-                return string
-            }
+            return string
         }
     }
 
@@ -80,7 +74,7 @@ class IconUtil {
 
         // iconutil only returns data if something went wrong.
         if let data {
-            throw IconUtilError.data(data)
+            throw IconUtilError(data)
         }
 
         try FileManager.default.copyItem(at: iconURL, to: output)

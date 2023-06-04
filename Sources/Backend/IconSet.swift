@@ -69,8 +69,8 @@ extension IconSet {
         }
 
         func writeInto(directory url: URL) throws {
-            let url = try FileVerifier(url: url)
-                .url(verifying: [.fileExists, .isDirectory])
+            let url = try FileVerifier(options: [.fileExists, .isDirectory])
+                .verify(url: url)
             try image
                 .resized(to: dimension.size)
                 .urlDestination(forURL: outputURL(from: url), type: .png)

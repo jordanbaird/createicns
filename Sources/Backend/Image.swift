@@ -136,12 +136,8 @@ struct Image {
 
     // MARK: Instance Methods
 
-    func dataDestination(forType type: UTType) -> Destination<Data> {
-        Destination.dataDestination(forImage: self, type: type)
-    }
-
-    func urlDestination(forURL url: URL, type: UTType) -> Destination<URL> {
-        Destination.urlDestination(forURL: url, image: self, type: type)
+    func urlDestination(forURL url: URL, type: UTType) -> URLDestination {
+        URLDestination(url: url, image: self, type: type)
     }
 
     private func makeCGImage() throws -> CGImage {
@@ -183,87 +179,35 @@ struct Image {
 
 // MARK: Image.Destination
 extension Image {
-    struct Destination<Kind> {
-        private struct BaseDestination {
-            private let value: Kind
-
-            init(data: NSMutableData) where Kind == Data {
-                self.value = data as Data
-            }
-
-            init(url: URL) where Kind == URL {
-                self.value = url
-            }
-
-            func getData() -> NSMutableData where Kind == Data {
-                if let data = value as? NSMutableData {
-                    return data
-                }
-                return NSMutableData(data: value)
-            }
-
-            func getURL() -> URL where Kind == URL {
-                return value
-            }
-        }
-
+    /// An image destination that writes an image to a url.
+    struct URLDestination {
+        /// The url to write the image to.
+        let url: URL
+        /// The image to write.
         let image: Image
-
+        /// An identifier specifying the type of image data to write.
         let type: UTType
 
-        private let baseDestination: BaseDestination
-
-        private var typeIdentifier: CFString {
-            type.identifier as CFString
-        }
-
-        private init(image: Image, type: UTType, baseDestination: BaseDestination) {
+        /// Creates an image destination that writes the given image to the given
+        /// url, using the data type specified by the given type identifier.
+        init(url: URL, image: Image, type: UTType) {
+            self.url = url
             self.image = image
             self.type = type
-            self.baseDestination = baseDestination
         }
-    }
-}
 
-// MARK: Destination<Data>
-extension Image.Destination<Data> {
-    static func dataDestination(forImage image: Image, type: UTType) -> Self {
-        Self(image: image, type: type, baseDestination: BaseDestination(data: NSMutableData()))
-    }
-
-    func makeData() throws -> Data {
-        let data = baseDestination.getData()
-        guard data.isEmpty else {
-            throw Image.ImageCreationError.invalidData
-        }
-        guard let destination = CGImageDestinationCreateWithData(data, typeIdentifier, 1, nil) else {
-            throw Image.ImageCreationError.invalidDestination
-        }
-        let cgImage = try image.makeCGImage()
-        CGImageDestinationAddImage(destination, cgImage, nil)
-        guard CGImageDestinationFinalize(destination) else {
-            throw Image.ImageCreationError.invalidDestination
-        }
-        return data as Data
-    }
-}
-
-// MARK: Destination<URL>
-extension Image.Destination<URL> {
-    static func urlDestination(forURL url: URL, image: Image, type: UTType) -> Self {
-        Self(image: image, type: type, baseDestination: BaseDestination(url: url))
-    }
-
-    func write() throws {
-        let url = try FileVerifier(url: baseDestination.getURL())
-            .url(verifying: .fileDoesNotExist)
-        guard let destination = CGImageDestinationCreateWithURL(url as CFURL, typeIdentifier, 1, nil) else {
-            throw Image.ImageCreationError.invalidDestination
-        }
-        let cgImage = try image.makeCGImage()
-        CGImageDestinationAddImage(destination, cgImage, nil)
-        if !CGImageDestinationFinalize(destination) {
-            throw Image.ImageCreationError.invalidDestination
+        /// Writes the data to the destination's url.
+        func write() throws {
+            let url = try FileVerifier(options: [!.fileExists]).verify(url: url) as CFURL
+            let type = type.identifier as CFString
+            guard let destination = CGImageDestinationCreateWithURL(url, type, 1, nil) else {
+                throw Image.ImageCreationError.invalidDestination
+            }
+            let cgImage = try image.makeCGImage()
+            CGImageDestinationAddImage(destination, cgImage, nil)
+            if !CGImageDestinationFinalize(destination) {
+                throw Image.ImageCreationError.invalidDestination
+            }
         }
     }
 }
