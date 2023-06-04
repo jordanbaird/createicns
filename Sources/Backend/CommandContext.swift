@@ -25,7 +25,7 @@ public struct CommandContext {
     /// Creates a command context with the given input path, output path, and
     /// Boolean value indicating whether the output type should be an iconset.
     public init(input: String, output: String?, isIconSet: Bool) throws {
-        let fileType: UTType
+        let fileType: FileType
         let actionMessage: String
         let successMessage: String
         let iconSetWriter: IconSetWriter

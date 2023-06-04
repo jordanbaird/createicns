@@ -51,8 +51,8 @@ struct Image {
 
     // MARK: Static Properties
 
-    private static let validTypes: [UTType] = {
-        let prevalidatedTypes: [UTType] = [
+    private static let validTypes: [FileType] = {
+        let prevalidatedTypes: [FileType] = [
             .pdf,
             .png,
         ]
@@ -61,9 +61,9 @@ struct Image {
             guard let identifier = value as? String else {
                 return nil
             }
-            return UTType(identifier)
+            return FileType(identifier)
         }
-        var seen = Set<UTType>()
+        var seen = Set<FileType>()
         return validTypes.filter { seen.insert($0).inserted }
     }()
 
@@ -80,7 +80,7 @@ struct Image {
     }
 
     init(url: URL) throws {
-        let type = UTType(url: url) ?? .image
+        let type = FileType(url: url) ?? .image
 
         if !Self.validTypes.contains(type) {
             throw ImageCreationError.invalidImageFormat
@@ -136,7 +136,7 @@ struct Image {
 
     // MARK: Instance Methods
 
-    func urlDestination(forURL url: URL, type: UTType) -> URLDestination {
+    func urlDestination(forURL url: URL, type: FileType) -> URLDestination {
         URLDestination(url: url, image: self, type: type)
     }
 
@@ -186,11 +186,11 @@ extension Image {
         /// The image to write.
         let image: Image
         /// An identifier specifying the type of image data to write.
-        let type: UTType
+        let type: FileType
 
         /// Creates an image destination that writes the given image to the given
         /// url, using the data type specified by the given type identifier.
-        init(url: URL, image: Image, type: UTType) {
+        init(url: URL, image: Image, type: FileType) {
             self.url = url
             self.image = image
             self.type = type

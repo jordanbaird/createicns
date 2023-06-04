@@ -43,7 +43,7 @@ struct FileVerifier {
         fileprivate enum Kind {
             case fileExists
             case isDirectory
-            case isFileType(UTType)
+            case isFileType(FileType)
         }
 
         /// The underlying kind of the option.
@@ -79,7 +79,7 @@ struct FileVerifier {
         static let isDirectory = Self(kind: .isDirectory)
 
         /// An option that verifies that the file is of the given file type.
-        static func isFileType(_ fileType: UTType) -> Self {
+        static func isFileType(_ fileType: FileType) -> Self {
             Self(kind: .isFileType(fileType))
         }
 
@@ -123,7 +123,7 @@ struct FileVerifier {
                     }
                 }
             case .isFileType(let fileType):
-                let isFileType = UTType(url: location.url) == fileType
+                let isFileType = FileType(url: location.url) == fileType
                 if option.isInverted {
                     guard !isFileType else {
                         throw VerificationError.invalidPathExtension(location.url.pathExtension, nil)
@@ -163,7 +163,7 @@ extension FileVerifier {
         case doesNotExist(String)
         case isDirectory(String)
         case isNotDirectory(String)
-        case invalidPathExtension(String, UTType?)
+        case invalidPathExtension(String, FileType?)
 
         var message: FormattedText {
             switch self {
