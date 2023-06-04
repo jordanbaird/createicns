@@ -96,7 +96,8 @@ struct FileVerifier {
 
     /// Verifies the url and path in the given file location using the verifier's
     /// options.
-    func verify(location: FileLocation) throws -> (path: String, url: URL) {
+    @discardableResult
+    func verify(location: FileLocation) throws -> (url: URL, path: String) {
         lazy var status: (fileExists: Bool, isDirectory: Bool) = {
             var isDirectory: ObjCBool = false
             let fileExists = FileManager.default.fileExists(atPath: location.path, isDirectory: &isDirectory)
@@ -137,19 +138,19 @@ struct FileVerifier {
                 }
             }
         }
-        return (location.path, location.url)
-    }
-
-    /// Verifies the given path using the verifier's options.
-    @discardableResult
-    func verify(path: String) throws -> String {
-        try verify(location: FileLocation(path: path)).path
+        return (location.url, location.path)
     }
 
     /// Verifies the given url using the verifier's options.
     @discardableResult
     func verify(url: URL) throws -> URL {
         try verify(location: FileLocation(url: url)).url
+    }
+
+    /// Verifies the given path using the verifier's options.
+    @discardableResult
+    func verify(path: String) throws -> String {
+        try verify(location: FileLocation(path: path)).path
     }
 
     /// Creates a verifier that verifies files using the given options.
