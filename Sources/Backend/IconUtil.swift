@@ -5,8 +5,8 @@
 
 import Foundation
 
-/// Wraps the iconutil command line utility.
-class IconUtil {
+/// Wraps the `iconutil` command line utility.
+enum IconUtil {
     private struct IconUtilError: Error, CustomStringConvertible {
         let data: Data
 
@@ -22,15 +22,8 @@ class IconUtil {
         }
     }
 
-    let iconSet: IconSet
-
-    /// Creates an iconutil command for the given iconset.
-    init(iconSet: IconSet) {
-        self.iconSet = iconSet
-    }
-
-    /// Writes this instance's iconset to the given output url.
-    func run(writingTo outputURL: URL) throws {
+    /// Writes the given iconset to the given output url.
+    static func write(_ iconSet: IconSet, to outputURL: URL) throws {
         let tempURL = try FileManager.default.url(
             for: .itemReplacementDirectory,
             in: .userDomainMask,

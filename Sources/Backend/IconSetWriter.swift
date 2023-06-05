@@ -21,7 +21,7 @@ enum IconSetWriter {
         case .direct:
             try iconSet.write(to: outputURL)
         case .iconUtil:
-            try IconUtil(iconSet: iconSet).run(writingTo: outputURL)
+            try IconUtil.write(iconSet, to: outputURL)
         }
     }
 }
