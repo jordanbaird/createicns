@@ -3,6 +3,7 @@
 // createicns
 //
 
+import CoreGraphics
 import Foundation
 import ImageIO
 
