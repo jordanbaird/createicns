@@ -7,21 +7,6 @@ import Foundation
 
 /// Wraps the `iconutil` command line utility.
 enum IconUtil {
-    private struct IconUtilError: Error, CustomStringConvertible {
-        let data: Data
-
-        init(_ data: Data) {
-            self.data = data
-        }
-
-        var description: String {
-            guard let string = String(data: data, encoding: .utf8) else {
-                return "An unknown error occurred."
-            }
-            return string
-        }
-    }
-
     /// Writes the given iconset to the given output url.
     static func write(_ iconSet: IconSet, to outputURL: URL) throws {
         let tempURL = try FileManager.default.url(
@@ -74,7 +59,7 @@ enum IconUtil {
             
             // iconutil only returns data if something went wrong.
             if let data {
-                throw IconUtilError(data)
+                throw ContextualDataError(data, context: self)
             }
 
             try FileManager.default.copyItem(at: iconURL, to: outputURL)

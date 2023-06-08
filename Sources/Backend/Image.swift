@@ -56,20 +56,14 @@ struct Image {
     // MARK: Static Properties
 
     /// The valid file types for an image.
-    private static let validTypes: [FileType] = {
-        let prevalidatedTypes: [FileType] = [
-            .pdf,
-            .png,
-        ]
-        let identifiers = CGImageSourceCopyTypeIdentifiers() as Array
-        let validTypes = prevalidatedTypes + identifiers.compactMap { value in
-            guard let identifier = value as? String else {
-                return nil
-            }
-            return FileType(identifier)
+    static let validTypes: Set<FileType> = {
+        let prevalidatedTypes: Set<FileType> = [.pdf]
+        guard let identifiers = CGImageSourceCopyTypeIdentifiers() as? [String] else {
+            return prevalidatedTypes
         }
-        var seen = Set<FileType>()
-        return validTypes.filter { seen.insert($0).inserted }
+        return identifiers.reduce(into: prevalidatedTypes) { result, identifier in
+            result.insert(FileType(identifier))
+        }
     }()
 
     // MARK: Instance Properties

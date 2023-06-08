@@ -20,12 +20,15 @@ extension ArgumentHelp {
         """
 
     static let isIconSet: Self = """
-        Convert the input into an iconset file instead of an ICNS file. If \
+        Convert the input into an iconset file instead of an icns file. If \
         this option is present with an output, the output path's extension \
-        must be 'iconset'.\n
+        must be 'iconset'.
         """
+
+    static let listFormats: Self = "List valid input formats."
 }
 
 extension NameSpecification {
     static let isIconSet: Self = [.customShort("s"), .customLong("iconset")]
+    static let listFormats: Self = [.customShort("l"), .customLong("list")]
 }

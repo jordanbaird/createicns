@@ -8,7 +8,7 @@ import Darwin
 // MARK: TextOutputColor
 
 /// Colors to use to format text when displayed in a command line interface.
-enum TextOutputColor {
+public enum TextOutputColor {
     /// Formats the text in red.
     case red
     /// Formats the text in green.
@@ -48,7 +48,7 @@ enum TextOutputColor {
 // MARK: TextOutputStyle
 
 /// Styles to use to format text when displayed in a command line interface.
-enum TextOutputStyle {
+public enum TextOutputStyle {
     /// Formats the text in bold.
     case bold
     /// Formats the text in the default style.
@@ -73,68 +73,42 @@ enum TextOutputStyle {
     }
 }
 
-// MARK: FormattingComponents
+private enum FormattingComponent {
+    case unformatted(String)
+    case formatted(String, TextOutputColor?, TextOutputStyle?)
 
-/// Components used to build a `FormattedText` instance.
-struct FormattingComponents {
-    private enum Component {
-        case unformatted(String)
-        case formatted(String, TextOutputColor?, TextOutputStyle?)
-
-        var formattedDescription: String {
-            switch self {
-            case .unformatted(let string):
-                return string
-            case .formatted(let string, let color, let style):
-                return [
-                    style?.onCode ?? "",
-                    color?.onCode ?? "",
-                    string,
-                    color?.offCode ?? "",
-                    style?.offCode ?? "",
-                ].joined()
-            }
-        }
-
-        var unformattedDescription: String {
-            switch self {
-            case .unformatted(let string), .formatted(let string, _, _):
-                return string
-            }
-        }
-    }
-
-    private var components: [Component]
-
-    var formatted: String {
-        components.map { $0.formattedDescription }.joined()
-    }
-
-    var unformatted: String {
-        components.map { $0.unformattedDescription }.joined()
-    }
-
-    private init(components: [Component]) {
-        self.components = components
-    }
-
-    init() {
-        self.init(components: [])
-    }
-
-    init<Value: CustomStringConvertible>(value: Value, color: TextOutputColor? = nil, style: TextOutputStyle? = nil) {
+    static func component<Value: CustomStringConvertible>(
+        value: Value,
+        color: TextOutputColor? = nil,
+        style: TextOutputStyle? = nil
+    ) -> Self {
         let string = String(describing: value)
-        if string.isEmpty {
-            self.init(components: [])
-        } else if color != nil || style != nil {
-            self.init(components: [.formatted(string, color, style)])
-        } else {
-            self.init(components: [.unformatted(string)])
+        if color != nil || style != nil {
+            return .formatted(string, color, style)
+        }
+        return .unformatted(string)
+    }
+
+    var formattedDescription: String {
+        switch self {
+        case .unformatted(let string):
+            return string
+        case .formatted(let string, let color, let style):
+            return [
+                style?.onCode ?? "",
+                color?.onCode ?? "",
+                string,
+                color?.offCode ?? "",
+                style?.offCode ?? "",
+            ].joined()
         }
     }
 
-    mutating func append(_ other: Self) {
-        components.append(contentsOf: other.components)
+    var unformattedDescription: String {
+        switch self {
+        case .unformatted(let string), .formatted(let string, _, _):
+            return string
+        }
     }
 }
 
@@ -142,95 +116,98 @@ struct FormattingComponents {
 
 /// Text that is displayed in a formatted representation when printed to a
 /// command line interface.
-struct FormattedText {
+public struct FormattedText {
     /// The components that make up this text instance.
-    var components: FormattingComponents
+    private var components: [FormattingComponent]
 
     /// Creates a text instance with the given components.
-    init(components: FormattingComponents) {
+    private init(components: [FormattingComponent]) {
         self.components = components
     }
 
     /// Creates an empty text instance.
-    init() {
-        self.init(components: FormattingComponents())
+    public init() {
+        self.init(components: [])
     }
 
     /// Creates a text instance with a textual representation of the given value,
     /// displayed with the given color and style.
-    init<Value: CustomStringConvertible>(_ value: Value, color: TextOutputColor? = nil, style: TextOutputStyle? = nil) {
-        self.init(components: FormattingComponents(value: value, color: color, style: style))
+    public init<Value: CustomStringConvertible>(
+        _ value: Value,
+        color: TextOutputColor? = nil,
+        style: TextOutputStyle? = nil
+    ) {
+        self.init(components: [
+            .component(value: value, color: color, style: style),
+        ])
     }
 
     /// Creates a text instance with the same components as the given instance.
-    init(_ formattedText: Self) {
+    public init(_ formattedText: Self) {
         self.init(components: formattedText.components)
     }
 
+    /// Creates a text instance with the contents of the given string.
+    public init(contentsOf string: String) {
+        self.init(components: [.unformatted(string)])
+    }
+
     /// Appends the components in the given text instance to this instance's components.
-    mutating func append(_ other: Self) {
-        components.append(other.components)
+    public mutating func append(_ other: Self) {
+        components.append(contentsOf: other.components)
+    }
+
+    /// Appends the contents of the given string to this text instance.
+    public mutating func append(contentsOf string: String) {
+        append(Self(contentsOf: string))
     }
 }
 
 // MARK: FormattedText: TextOutputStreamable
 extension FormattedText: TextOutputStreamable {
-    func write<Target: TextOutputStream>(to target: inout Target) {
+    public func write<Target: TextOutputStream>(to target: inout Target) {
         if isatty(STDOUT_FILENO) == 1 && isatty(STDERR_FILENO) == 1 {
-            target.write(components.formatted)
+            for component in components {
+                target.write(component.formattedDescription)
+            }
         } else {
-            target.write(components.unformatted)
+            for component in components {
+                target.write(component.unformattedDescription)
+            }
         }
     }
 }
 
 // MARK: FormattedText: ExpressibleByStringLiteral
 extension FormattedText: ExpressibleByStringLiteral {
-    init(stringLiteral value: String) {
-        self.init(components: FormattingComponents(value: value))
+    public init(stringLiteral value: String) {
+        self.init(contentsOf: value)
     }
 }
 
 // MARK: FormattedText: ExpressibleByStringInterpolation
 extension FormattedText: ExpressibleByStringInterpolation {
-    struct StringInterpolation: StringInterpolationProtocol {
-        fileprivate var components = FormattingComponents()
+    public struct StringInterpolation: StringInterpolationProtocol {
+        fileprivate var components = [FormattingComponent]()
 
-        init(literalCapacity: Int, interpolationCount: Int) { }
+        public init(literalCapacity: Int, interpolationCount: Int) { }
 
-        mutating func appendLiteral(_ literal: String) {
-            components.append(FormattingComponents(value: literal))
+        public mutating func appendLiteral(_ literal: String) {
+            components.append(.unformatted(literal))
         }
 
-        mutating func appendInterpolation<Value: CustomStringConvertible>(
+        public mutating func appendInterpolation<Value: CustomStringConvertible>(
             _ value: Value,
             color: TextOutputColor? = nil,
             style: TextOutputStyle? = nil
         ) {
-            components.append(FormattingComponents(value: value, color: color, style: style))
+            components.append(
+                .component(value: value, color: color, style: style)
+            )
         }
     }
 
-    init(stringInterpolation interpolation: StringInterpolation) {
+    public init(stringInterpolation interpolation: StringInterpolation) {
         self.init(components: interpolation.components)
-    }
-}
-
-// MARK: FormattedError
-
-/// An error type that is displayed in a formatted representation when printed
-/// to a command line interface.
-protocol FormattedError: Error, CustomStringConvertible {
-    /// The formatted message to display.
-    ///
-    /// If one of either standard output or standard error does not point to a
-    /// terminal, the message is displayed without formatting.
-    var message: FormattedText { get }
-}
-
-// MARK: FormattedError: CustomStringConvertible
-extension FormattedError {
-    var description: String {
-        String(describing: message)
     }
 }

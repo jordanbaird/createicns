@@ -1,30 +1,30 @@
 //
-// CommandContext.swift
+// Create.swift
 // createicns
 //
 
 import Foundation
 
-/// A context that manages the execution and output of the createicns tool.
-public struct CommandContext {
+/// A runner that manages the creation and output of icns and iconset files.
+struct Create: Runner {
     /// The url that is used to create the iconset.
     let inputURL: URL
 
     /// The future location of the created iconset.
     let outputURL: URL
 
-    /// A message to print before the context begins verification.
+    /// A message to print before the runner begins verification.
     let actionMessage: String
 
-    /// A message to print after a successful run of the context.
+    /// A message to print after a successful run.
     let successMessage: String
 
-    /// An object that writes an iconset to the context's output.
+    /// An object that writes an iconset to the runner's output.
     let writer: IconSetWriter
 
-    /// Creates a command context with the given input path, output path, and
-    /// Boolean value indicating whether the output type should be an iconset.
-    public init(input: String, output: String?, isIconSet: Bool) throws {
+    /// Creates a runner with the given input path, output path, and a Boolean
+    /// value indicating whether the output type should be an iconset.
+    init(input: String, output: String?, isIconSet: Bool) throws {
         let fileType: FileType
         let actionMessage: String
         let successMessage: String
@@ -63,10 +63,7 @@ public struct CommandContext {
         self.writer = writer
     }
 
-    /// Ensures the context's input and output are both valid before creating an
-    /// iconset from the context's input url and writing the resulting images to
-    /// the context's output url.
-    public func run() throws {
+    func run() throws {
         print(actionMessage)
         let image = try Image(url: inputURL)
         let iconSet = IconSet(image: image)

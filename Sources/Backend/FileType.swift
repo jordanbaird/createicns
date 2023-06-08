@@ -158,6 +158,13 @@ extension FileType {
     }()
 }
 
+// MARK: FileType: Comparable
+extension FileType: Comparable {
+    static func < (lhs: Self, rhs: Self) -> Bool {
+        lhs.identifier < rhs.identifier
+    }
+}
+
 // MARK: FileType: CustomStringConvertible
 extension FileType: CustomStringConvertible {
     var description: String {
