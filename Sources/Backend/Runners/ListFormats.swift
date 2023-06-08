@@ -3,13 +3,16 @@
 // createicns
 //
 
+import Foundation
+
 /// A runner that lists the tool's valid input formats.
 struct ListFormats: Runner {
-    private typealias PaddedColumn = (cells: [String], length: Int, cellCount: Int)
-
     /// Creates a text table with the given header and columns.
-    private func textTable(header: String?, columns: [[String]]) -> String {
+    private func textTable(header: String, columns: [[String]]) -> String {
+        typealias PaddedColumn = (cells: [String], length: Int, cellCount: Int)
+
         let pad = " "
+
         let (paddedColumns, maxCellCount) = columns.reduce(
             into: (paddedColumns: [PaddedColumn](), maxCellCount: 0)
         ) { outerState, column in
@@ -35,41 +38,33 @@ struct ListFormats: Runner {
             }
         }
 
-        var lines = [String]()
-
-        if let header {
-            lines.append(header)
-            // Add a dashed line between the header and the first row of the table.
-            let headerBreak = paddedColumns
+        let headerLines: [String] = {
+            // Divide the header and body with a dashed line.
+            let dash = "-", divider = paddedColumns
                 .map { column in
-                    String(repeating: "-", count: column.length)
+                    String(repeating: dash, count: column.length)
                 }
-                .joined(separator: "-")
-            lines.append(headerBreak)
-        }
+                .joined(separator: dash)
+            return [header, divider]
+        }()
 
-        for n in 0..<maxCellCount {
-            var lineFragments = [String]()
-            for column in paddedColumns {
-                if column.cellCount > n {
-                    lineFragments.append(column.cells[n])
-                } else {
-                    // We're past the end of this column. Append whitespace to prepare
-                    // for the next column. Note that there may not _be_ a next column,
-                    // but it's easier to just trim the excess once we're done instead
-                    // of checking for the last column on every iteration.
-                    lineFragments.append(String(repeating: pad, count: column.length))
+        let lines = headerLines + (0..<maxCellCount).map { cellIndex in
+            paddedColumns.map { column in
+                guard cellIndex < column.cellCount else {
+                    // We're past the end of this column. Pad with whitespace to the start
+                    // of the next column (note that there might not actually _be_ a next
+                    // column, but it's easier to just trim the result once we're finished
+                    // instead of checking the column index on every iteration).
+                    return String(repeating: pad, count: column.length)
                 }
+                return column.cells[cellIndex]
             }
-            let line = lineFragments.joined(separator: pad)
-            lines.append(line)
+            .joined(separator: pad)
+            .trimmingSuffix { $0.isWhitespace } // Lazy hack (see above)
         }
 
-        return lines.map { line in
-            // Lazy hack: trim the whitespace that we appended earlier.
-            line.trimmingCharacters(in: .whitespaces)
-        }
-        .joined(separator: "\n")
+        // Finally, join the lines into a single string.
+        return lines.joined(separator: "\n")
     }
 
     func run() {

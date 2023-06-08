@@ -42,7 +42,13 @@ struct Create: Runner {
             writer = .iconUtil
         }
 
-        let inputURL = URL(fileURLWithPath: input)
+        let inputURL: URL = {
+            if #available(macOS 13.0, *) {
+                return URL(filePath: input)
+            } else {
+                return URL(fileURLWithPath: input)
+            }
+        }()
         let outputURL: URL = {
             guard let output else {
                 let inputDeletingExtension = inputURL.deletingPathExtension()
@@ -51,13 +57,25 @@ struct Create: Runner {
                 }
                 return inputDeletingExtension
             }
-            return URL(fileURLWithPath: output)
+            if #available(macOS 13.0, *) {
+                return URL(filePath: output)
+            } else {
+                return URL(fileURLWithPath: output)
+            }
         }()
 
-        self.inputURL = try FileVerifier(options: [.fileExists, !.isDirectory])
-            .verify(url: inputURL)
-        self.outputURL = try FileVerifier(options: [!.fileExists, !.isDirectory, .isFileType(fileType)])
-            .verify(url: outputURL)
+        let inputVerifier = FileVerifier(options: [
+            .fileExists,
+            .isDirectory.inverted,
+        ])
+        let outputVerifier = FileVerifier(options: [
+            .fileExists.inverted,
+            .isDirectory.inverted,
+            .isFileType(fileType),
+        ])
+
+        self.inputURL = try inputVerifier.verify(url: inputURL)
+        self.outputURL = try outputVerifier.verify(url: outputURL)
         self.actionMessage = actionMessage
         self.successMessage = successMessage
         self.writer = writer
