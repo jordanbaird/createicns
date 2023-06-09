@@ -5,7 +5,7 @@
 
 import Foundation
 
-// MARK: - StringProtocol Extension
+// MARK: - StringProtocol
 
 private extension StringProtocol {
     static var pathSeparator: String { "/" }
