@@ -102,6 +102,7 @@ struct FileInfo {
 
     // MARK: Properties
 
+    /// The file information's underlying representation.
     private let representation: FileRepresentation
 
     /// The standardized url associated with this file information.
