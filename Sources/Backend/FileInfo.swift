@@ -5,27 +5,31 @@
 
 import Foundation
 
-private let pathSeparator = "/"
+private extension StringProtocol {
+    static var pathSeparator: String { "/" }
 
-private extension Sequence where Element: StringProtocol {
-    func joinedAsPath() -> String {
-        joined(separator: pathSeparator)
+    var fileExists: Bool {
+        FileManager.default.fileExists(atPath: String(self))
+    }
+
+    func isDirectory(directoryHint: FileInfo.DirectoryHint) -> Bool {
+        switch directoryHint {
+        case .isDirectory:
+            return true
+        case .notDirectory:
+            return false
+        case .checkFileSystem:
+            var b: ObjCBool = false
+            return FileManager.default.fileExists(atPath: String(self), isDirectory: &b) && b.boolValue
+        case .inferFromPath:
+            return hasSuffix(Self.pathSeparator)
+        }
     }
 }
 
-@available(macOS 13.0, *)
-private extension URL.DirectoryHint {
-    static func fileInfoDirectoryHint(_ directoryHint: FileInfo.DirectoryHint) -> Self {
-        switch directoryHint {
-        case .isDirectory:
-            return .isDirectory
-        case .notDirectory:
-            return .notDirectory
-        case .checkFileSystem:
-            return .checkFileSystem
-        case .inferFromPath:
-            return .inferFromPath
-        }
+private extension Sequence where Element: StringProtocol {
+    func joinedAsPath() -> String {
+        joined(separator: Element.pathSeparator)
     }
 }
 
@@ -36,13 +40,10 @@ private struct FileRepresentation {
 
     /// A standardized path string representing the file.
     var path: String {
-        guard #available(macOS 13.0, *) else {
-            if let components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
-                return components.percentEncodedPath
-            }
-            return url.path
+        if let components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
+            return components.percentEncodedPath
         }
-        return url.path(percentEncoded: true)
+        return url.path
     }
 
     /// Creates a representation by standardizing the given file url.
@@ -57,25 +58,7 @@ private struct FileRepresentation {
 
     /// Creates a representation from a standardized version of the given path string.
     init(filePath: String) {
-        if #available(macOS 13.0, *) {
-            self.init(standardizing: URL(filePath: filePath))
-        } else {
-            self.init(standardizing: URL(fileURLWithPath: filePath))
-        }
-    }
-
-    func isDirectory(directoryHint: FileInfo.DirectoryHint) -> Bool {
-        switch directoryHint {
-        case .isDirectory:
-            return true
-        case .notDirectory:
-            return false
-        case .checkFileSystem:
-            var b: ObjCBool = false
-            return FileManager.default.fileExists(atPath: path, isDirectory: &b) && b.boolValue
-        case .inferFromPath:
-            return path.hasSuffix(pathSeparator)
-        }
+        self.init(standardizing: URL(fileURLWithPath: filePath))
     }
 }
 
@@ -95,55 +78,50 @@ struct FileInfo {
 
     private let representation: FileRepresentation
 
-    var url: URL { representation.url }
+    var url: URL {
+        representation.url
+    }
 
-    var path: String { representation.path }
+    var path: String {
+        representation.path
+    }
 
-    var lastPathComponent: String { url.lastPathComponent }
+    var lastPathComponent: String {
+        url.lastPathComponent
+    }
 
-    var pathExtension: String { url.pathExtension }
+    var pathExtension: String {
+        url.pathExtension
+    }
 
     var fileExists: Bool {
-        FileManager.default.fileExists(atPath: path)
+        path.fileExists
     }
 
     var isDirectory: Bool {
-        representation.isDirectory(directoryHint: .checkFileSystem)
+        path.isDirectory(directoryHint: .checkFileSystem)
     }
 
     init(url: URL) {
         self.representation = FileRepresentation(fileURL: url)
     }
 
-    init(
-        path: String,
+    init<S: StringProtocol>(
+        path: S,
         directoryHint: DirectoryHint = .inferFromPath,
         relativeTo base: Self? = nil
     ) {
-        if #available(macOS 13.0, *) {
-            self.init(
-                url: URL(
-                    filePath: path,
-                    directoryHint: .fileInfoDirectoryHint(directoryHint),
-                    relativeTo: base?.url
-                )
-            )
-        } else {
-            self.init(
-                url: URL(
-                    fileURLWithPath: path,
-                    isDirectory: FileRepresentation(filePath: path).isDirectory(directoryHint: directoryHint),
-                    relativeTo: base?.url
-                )
-            )
-        }
+        let path = String(path)
+        let isDirectory = path.isDirectory(directoryHint: directoryHint)
+        let url = URL(fileURLWithPath: path, isDirectory: isDirectory, relativeTo: base?.url)
+        self.init(url: url)
     }
 
     func appending<S: StringProtocol>(
         path: S,
         directoryHint: DirectoryHint = .inferFromPath
     ) -> Self {
-        Self(path: String(path), directoryHint: directoryHint, relativeTo: self)
+        Self(path: path, directoryHint: directoryHint, relativeTo: self)
     }
 
     func appending<S: StringProtocol>(
