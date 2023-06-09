@@ -31,16 +31,16 @@ struct FileType {
         self.identifier = identifier
     }
 
-    /// Creates a type based on the path extension of the given url, ensuring that
-    /// it conforms to the given supertype.
+    /// Creates a type based on the given path extension, ensuring that it conforms to
+    /// the given supertype.
     ///
     /// If a type cannot be created from the path extension, or if a type can be created,
     /// but does not conform to the specified supertype, this initializer returns `nil`.
     /// If no supertype is specified, the requirement that the created type conform to a
     /// supertype is ignored.
-    init?(url: URL, conformingTo supertype: Self? = nil) {
+    init?(pathExtension: String, conformingTo supertype: Self? = nil) {
         if #available(macOS 11.0, *) {
-            let tag = url.pathExtension
+            let tag = pathExtension
             let tagClass = UTTagClass.filenameExtension
             let supertype = supertype.flatMap { supertype in
                 UTType(supertype.identifier)
@@ -50,7 +50,7 @@ struct FileType {
             }
             self.init(systemType.identifier)
         } else {
-            let tag = url.pathExtension as CFString
+            let tag = pathExtension as CFString
             let tagClass = kUTTagClassFilenameExtension
             let supertype = supertype.flatMap { supertype in
                 supertype.identifier as CFString
@@ -60,6 +60,17 @@ struct FileType {
             }
             self.init(identifier.takeRetainedValue() as String)
         }
+    }
+
+    /// Creates a type based on the path extension of the given url, ensuring that
+    /// it conforms to the given supertype.
+    ///
+    /// If a type cannot be created from the path extension, or if a type can be created,
+    /// but does not conform to the specified supertype, this initializer returns `nil`.
+    /// If no supertype is specified, the requirement that the created type conform to a
+    /// supertype is ignored.
+    init?(url: URL, conformingTo supertype: Self? = nil) {
+        self.init(pathExtension: url.pathExtension, conformingTo: supertype)
     }
 
     /// Creates a type based on the given system-defined type.

@@ -7,35 +7,6 @@ import Foundation
 
 /// A type that verifies files according to the conditions specified by a group of options.
 struct FileVerifier {
-    /// A verification payload containing a standardized path string and url.
-    struct FileLocation {
-        /// A url representing the file.
-        let url: URL
-        /// A standardized path string representing the file.
-        let path: String
-
-        /// Creates a file location from the given url.
-        init(url: URL) {
-            self.url = url
-            if #available(macOS 13.0, *) {
-                self.path = url.path(percentEncoded: true)
-            } else if let components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
-                self.path = components.percentEncodedPath
-            } else {
-                self.path = url.path
-            }
-        }
-
-        /// Creates a file location from a standardized version of the given path string.
-        init(path: String) {
-            if #available(macOS 13.0, *) {
-                self.init(url: URL(filePath: path))
-            } else {
-                self.init(url: URL(fileURLWithPath: path))
-            }
-        }
-    }
-
     /// A type that specifies a verification to perform using information supplied by a
     /// file verifier.
     struct Option {
@@ -125,62 +96,45 @@ struct FileVerifier {
     /// The options that specify the verifications to perform.
     let options: [Option]
 
-    /// Verifies the url and path in the given file location using the verifier's options.
+    /// Verifies the given file information using the verifier's options.
     @discardableResult
-    func verify(location: FileLocation) throws -> (url: URL, path: String) {
-        lazy var status: (fileExists: Bool, isDirectory: Bool) = {
-            var isDirectory: ObjCBool = false
-            let fileExists = FileManager.default.fileExists(atPath: location.path, isDirectory: &isDirectory)
-            return (fileExists, isDirectory.boolValue)
-        }()
+    func verify(info: FileInfo) throws -> FileInfo {
         for option in options {
             switch option.kind {
             case .fileExists:
                 if option.isInverted {
-                    guard !status.fileExists else {
-                        throw VerificationError.alreadyExists(location.path)
+                    guard !info.fileExists else {
+                        throw VerificationError.alreadyExists(info.path)
                     }
                 } else {
-                    guard status.fileExists else {
-                        throw VerificationError.doesNotExist(location.path)
+                    guard info.fileExists else {
+                        throw VerificationError.doesNotExist(info.path)
                     }
                 }
             case .isDirectory:
                 if option.isInverted {
-                    guard !status.isDirectory else {
-                        throw VerificationError.isDirectory(location.path)
+                    guard !info.isDirectory else {
+                        throw VerificationError.isDirectory(info.path)
                     }
                 } else {
-                    guard status.isDirectory else {
-                        throw VerificationError.isNotDirectory(location.path)
+                    guard info.isDirectory else {
+                        throw VerificationError.isNotDirectory(info.path)
                     }
                 }
             case .isFileType(let fileType):
-                let isFileType = FileType(url: location.url) == fileType
+                let isFileType = FileType(url: info.url) == fileType
                 if option.isInverted {
                     guard !isFileType else {
-                        throw VerificationError.invalidPathExtension(location.url.pathExtension, nil)
+                        throw VerificationError.invalidPathExtension(info.pathExtension, nil)
                     }
                 } else {
                     guard isFileType else {
-                        throw VerificationError.invalidPathExtension(location.url.pathExtension, fileType)
+                        throw VerificationError.invalidPathExtension(info.pathExtension, fileType)
                     }
                 }
             }
         }
-        return (location.url, location.path)
-    }
-
-    /// Verifies the given url using the verifier's options.
-    @discardableResult
-    func verify(url: URL) throws -> URL {
-        try verify(location: FileLocation(url: url)).url
-    }
-
-    /// Verifies the given path using the verifier's options.
-    @discardableResult
-    func verify(path: String) throws -> String {
-        try verify(location: FileLocation(path: path)).path
+        return info
     }
 
     /// Creates a verifier that verifies files using the given options.

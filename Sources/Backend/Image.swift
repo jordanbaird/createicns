@@ -202,7 +202,7 @@ extension Image {
 
         /// Writes the data to the destination's url.
         func write() throws {
-            let url = try FileVerifier(options: [!.fileExists]).verify(url: url) as CFURL
+            let url = try FileVerifier(options: [!.fileExists]).verify(info: FileInfo(url: url)).url as CFURL
             let type = type.identifier as CFString
             guard let destination = CGImageDestinationCreateWithURL(url, type, 1, nil) else {
                 throw Image.ImageCreationError.invalidDestination

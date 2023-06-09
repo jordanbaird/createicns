@@ -7,11 +7,11 @@ import Foundation
 
 /// A runner that manages the creation and output of icns and iconset files.
 struct Create: Runner {
-    /// The url that is used to create the iconset.
-    let inputURL: URL
+    /// The location of the initial image data.
+    let inputInfo: FileInfo
 
-    /// The future location of the created iconset.
-    let outputURL: URL
+    /// The location to write the created iconset.
+    let outputInfo: FileInfo
 
     /// A message to print before the runner begins verification.
     let actionMessage: String
@@ -42,26 +42,18 @@ struct Create: Runner {
             writer = .iconUtil
         }
 
-        let inputURL: URL = {
-            if #available(macOS 13.0, *) {
-                return URL(filePath: input)
-            } else {
-                return URL(fileURLWithPath: input)
-            }
-        }()
-        let outputURL: URL = {
+        let inputInfo = FileInfo(path: input)
+        let outputInfo: FileInfo = {
             guard let output else {
-                let inputDeletingExtension = inputURL.deletingPathExtension()
-                if let pathExtension = fileType.preferredFilenameExtension {
-                    return inputDeletingExtension.appendingPathExtension(pathExtension)
-                }
-                return inputDeletingExtension
+                return inputInfo.withPathExtension(for: fileType)
             }
-            if #available(macOS 13.0, *) {
-                return URL(filePath: output)
-            } else {
-                return URL(fileURLWithPath: output)
+            let info = FileInfo(path: output)
+            if info.isDirectory {
+                return info
+                    .appending(component: inputInfo.lastPathComponent)
+                    .withPathExtension(for: fileType)
             }
+            return info
         }()
 
         let inputVerifier = FileVerifier(options: [
@@ -74,8 +66,8 @@ struct Create: Runner {
             .isFileType(fileType),
         ])
 
-        self.inputURL = try inputVerifier.verify(url: inputURL)
-        self.outputURL = try outputVerifier.verify(url: outputURL)
+        self.inputInfo = try inputVerifier.verify(info: inputInfo)
+        self.outputInfo = try outputVerifier.verify(info: outputInfo)
         self.actionMessage = actionMessage
         self.successMessage = successMessage
         self.writer = writer
@@ -83,9 +75,9 @@ struct Create: Runner {
 
     func run() throws {
         print(actionMessage)
-        let image = try Image(url: inputURL)
+        let image = try Image(url: inputInfo.url)
         let iconSet = IconSet(image: image)
-        try writer.write(iconSet, to: outputURL)
+        try writer.write(iconSet, to: outputInfo.url)
         print(FormattedText(successMessage, color: .green))
     }
 }
