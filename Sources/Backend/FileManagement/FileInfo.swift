@@ -5,36 +5,24 @@
 
 import Foundation
 
-// MARK: - StringProtocol
+private let pathSeparator = "/"
 
-private extension StringProtocol {
-    static var pathSeparator: String { "/" }
-
-    var fileExists: Bool {
-        FileManager.default.fileExists(atPath: String(self))
-    }
-
-    func isDirectory(directoryHint: FileInfo.DirectoryHint) -> Bool {
-        switch directoryHint {
-        case .isDirectory:
-            return true
-        case .notDirectory:
-            return false
-        case .checkFileSystem:
-            var b: ObjCBool = false
-            return FileManager.default.fileExists(atPath: String(self), isDirectory: &b) && b.boolValue
-        case .inferFromPath:
-            return hasSuffix(Self.pathSeparator)
-        }
+private func pathIsDirectory(_ path: String, hint: FileInfo.DirectoryHint) -> Bool {
+    switch hint {
+    case .isDirectory:
+        return true
+    case .notDirectory:
+        return false
+    case .checkFileSystem:
+        var b: ObjCBool = false
+        return FileManager.default.fileExists(atPath: path, isDirectory: &b) && b.boolValue
+    case .inferFromPath:
+        return path.hasSuffix(pathSeparator)
     }
 }
 
-// MARK: - Sequence where Element: StringProtocol
-
-private extension Sequence where Element: StringProtocol {
-    func joinedAsPath() -> String {
-        joined(separator: Element.pathSeparator)
-    }
+private func joinedAsPath<S: Sequence>(components: S) -> String where S.Element: StringProtocol {
+    components.joined(separator: pathSeparator)
 }
 
 // MARK: - FileRepresentation
@@ -57,14 +45,14 @@ private struct FileRepresentation {
         self.url = fileURL.standardizedFileURL
     }
 
-    /// Creates a representation from the given url.
+    /// Creates a representation from a standardized version of the given url.
     init(fileURL: URL) {
         self.init(standardizing: fileURL)
     }
 
     /// Creates a representation from a standardized version of the given path string.
     init(filePath: String) {
-        self.init(standardizing: URL(fileURLWithPath: filePath))
+        self.init(fileURL: URL(fileURLWithPath: filePath))
     }
 }
 
@@ -79,24 +67,26 @@ extension FileRepresentation: Hashable { }
 
 // MARK: - FileInfo
 
-/// A type that contains information associated with a standardized file
-/// path or url.
+/// A type that contains information associated with a standardized file path or url.
 struct FileInfo {
 
     // MARK: Types
 
-    /// Constants that specify the method to use to determine whether a
-    /// path or url references a directory.
+    /// Constants that specify how to determine whether file information references
+    /// a directory.
     enum DirectoryHint {
-        /// Specifies that the path or url does reference a directory.
+        /// Specifies that the file information references a directory.
         case isDirectory
-        /// Specifies that the path or url does not reference a directory.
+
+        /// Specifies that the file information does not reference a directory.
         case notDirectory
-        /// Specifies that the path or url should check with the file system
-        /// to determine whether it references a directory.
+
+        /// Specifies that the file system should be checked to determine whether
+        /// the file information references a directory.
         case checkFileSystem
-        /// Specifies that the path or url should infer whether it references
-        /// a directory based on whether it has a trailing dash.
+
+        /// Specifies that the file information should infer whether it references
+        /// a directory based on whether its path has a trailing slash.
         case inferFromPath
     }
 
@@ -125,16 +115,16 @@ struct FileInfo {
         url.pathExtension
     }
 
-    /// A Boolean value that indicates whether the path associated with the
-    /// file information points to a valid file.
+    /// A Boolean value that indicates whether the path associated with the file
+    /// information points to a valid file.
     var fileExists: Bool {
-        path.fileExists
+        FileManager.default.fileExists(atPath: path)
     }
 
-    /// A Boolean value that indicates whether the path associated with the
-    /// file information points to a valid directory.
+    /// A Boolean value that indicates whether the path associated with the file
+    /// information points to a valid directory.
     var isDirectory: Bool {
-        path.isDirectory(directoryHint: .checkFileSystem)
+        pathIsDirectory(path, hint: .checkFileSystem)
     }
 
     // MARK: Initializers
@@ -144,23 +134,23 @@ struct FileInfo {
         self.representation = FileRepresentation(fileURL: url)
     }
 
-    /// Creates a file information instance from the given path and directory
-    /// hint, relative to a base file information instance.
+    /// Creates a file information instance from the given path and directory hint,
+    /// relative to a base instance.
     init<S: StringProtocol>(
         path: S,
         directoryHint: DirectoryHint = .inferFromPath,
         relativeTo base: Self? = nil
     ) {
         let path = String(path)
-        let isDirectory = path.isDirectory(directoryHint: directoryHint)
+        let isDirectory = pathIsDirectory(path, hint: directoryHint)
         let url = URL(fileURLWithPath: path, isDirectory: isDirectory, relativeTo: base?.url)
         self.init(url: url)
     }
 
     // MARK: Instance Methods
 
-    /// Returns a new file information instance by appending the given path
-    /// string to this instance using the given directory hint.
+    /// Returns a new file information instance by appending the given path string
+    /// to this instance using the given directory hint.
     func appending<S: StringProtocol>(
         path: S,
         directoryHint: DirectoryHint = .inferFromPath
@@ -168,17 +158,17 @@ struct FileInfo {
         Self(path: path, directoryHint: directoryHint, relativeTo: self)
     }
 
-    /// Returns a new file information instance by appending the given path
-    /// components to this instance using the given directory hint.
+    /// Returns a new file information instance by appending the given path components
+    /// to this instance using the given directory hint.
     func appending<S: StringProtocol>(
         components: S...,
         directoryHint: DirectoryHint = .inferFromPath
     ) -> Self {
-        appending(path: components.joinedAsPath(), directoryHint: directoryHint)
+        appending(path: joinedAsPath(components: components), directoryHint: directoryHint)
     }
 
-    /// Returns a new file information instance by appending the given path
-    /// component to this instance using the given directory hint.
+    /// Returns a new file information instance by appending the given path component
+    /// to this instance using the given directory hint.
     func appending<S: StringProtocol>(
         component: S,
         directoryHint: DirectoryHint = .inferFromPath
@@ -186,14 +176,14 @@ struct FileInfo {
         appending(components: component, directoryHint: directoryHint)
     }
 
-    /// Returns a new file information instance by appending the given path
-    /// extension to this instance.
+    /// Returns a new file information instance by appending the given path extension
+    /// to this instance.
     func appendingPathExtension(_ pathExtension: String) -> Self {
         Self(url: url.appendingPathExtension(pathExtension))
     }
 
-    /// Returns a new file information instance by appending the given file
-    /// type's preferred path extension to this instance.
+    /// Returns a new file information instance by appending the given file type's
+    /// preferred path extension to this instance.
     func appendingPathExtension(for fileType: FileType) -> Self {
         if let current = FileType(pathExtension: url.pathExtension) {
             guard current != fileType else {
@@ -206,20 +196,20 @@ struct FileInfo {
         return self
     }
 
-    /// Returns a new file information instance by deleting the path extension
-    /// from this instance.
+    /// Returns a new file information instance by deleting the path extension from
+    /// this instance.
     func deletingPathExtension() -> Self {
         Self(url: url.deletingPathExtension())
     }
 
-    /// Returns a new file information instance by replacing this instance's
-    /// path extension with the given path extension.
+    /// Returns a new file information instance by replacing this instance's path
+    /// extension with the given path extension.
     func withPathExtension(_ pathExtension: String) -> Self {
         deletingPathExtension().appendingPathExtension(pathExtension)
     }
 
-    /// Returns a new file information instance by replacing this instance's
-    /// path extension with the given file type's preferred path extension.
+    /// Returns a new file information instance by replacing this instance's path
+    /// extension with the given file type's preferred path extension.
     func withPathExtension(for fileType: FileType) -> Self {
         deletingPathExtension().appendingPathExtension(for: fileType)
     }
