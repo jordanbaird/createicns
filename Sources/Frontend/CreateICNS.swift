@@ -14,7 +14,7 @@ struct CreateICNS: ParsableCommand {
         commandName: commandName,
         abstract: "Create an icns or iconset file from an image.",
         usage: "\(commandName) [<options>] <input> [<output>]",
-        version: "0.0.4"
+        version: Version.current.versionString
     )
 
     @OptionGroup var options: Options
