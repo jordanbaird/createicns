@@ -22,13 +22,30 @@ struct Create: Runner {
     /// An object that writes an iconset to the runner's output.
     let writer: IconSetWriter
 
-    /// Creates a runner with the given input path, output path, and a Boolean
-    /// value indicating whether the output type should be an iconset.
-    init(input: String, output: String?, isIconSet: Bool) throws {
+    /// Creates a runner with the given input path, output path, and output type.
+    init(input: String, output: String?, type: OutputType) throws {
         let fileType: FileType
         let actionMessage: String
         let successMessage: String
         let writer: IconSetWriter
+
+        let isIconSet: Bool = {
+            switch type {
+            case .icns:
+                return false
+            case .iconSet:
+                return true
+            case .infer:
+                if
+                    let output,
+                    let outputFileType = FileInfo(path: output).fileType
+                {
+                    return outputFileType == .iconSet
+                }
+                // FIXME: Should throw an error instead of assuming false.
+                return false
+            }
+        }()
 
         if isIconSet {
             fileType = .iconSet
@@ -48,7 +65,10 @@ struct Create: Runner {
                 return inputInfo.withPathExtension(for: fileType)
             }
             let info = FileInfo(path: output)
-            if info.isDirectory {
+            if
+                !isIconSet,
+                info.isDirectory
+            {
                 return info
                     .appending(component: inputInfo.lastPathComponent)
                     .withPathExtension(for: fileType)

@@ -17,14 +17,14 @@ struct CreateICNS: ParsableCommand {
         version: "0.0.4"
     )
 
-    @OptionGroup var options: AllOptions
+    @OptionGroup var options: Options
 
     func run() throws {
         do {
             try MainRunner(
                 input: options.input,
                 output: options.output,
-                isIconSet: options.isIconSet,
+                type: options.type,
                 listFormats: options.listFormats,
                 helpMessage: HelpGenerator<Self>.generate
             ).run()

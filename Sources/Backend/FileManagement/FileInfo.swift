@@ -90,6 +90,11 @@ struct FileInfo {
         Helpers.pathIsDirectory(path, hint: .checkFileSystem)
     }
 
+    /// The file type associated with the file information's path extension.
+    var fileType: FileType? {
+        FileType(pathExtension: pathExtension)
+    }
+
     // MARK: Initializers
 
     /// Creates a file information instance from the given url.
@@ -148,7 +153,7 @@ struct FileInfo {
     /// Returns a new file information instance by appending the given file type's
     /// preferred path extension to this instance.
     func appendingPathExtension(for fileType: FileType) -> Self {
-        if let current = FileType(pathExtension: url.pathExtension) {
+        if let current = self.fileType {
             guard current != fileType else {
                 return self
             }

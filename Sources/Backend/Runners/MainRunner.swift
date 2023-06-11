@@ -13,7 +13,7 @@ public struct MainRunner: Runner {
     public init(
         input: String?,
         output: String?,
-        isIconSet: Bool,
+        type: OutputType,
         listFormats: Bool,
         helpMessage: @escaping () -> String
     ) throws {
@@ -24,7 +24,7 @@ public struct MainRunner: Runner {
         }
 
         if let input {
-            try runners.insert(Create(input: input, output: output, isIconSet: isIconSet), at: 0)
+            try runners.insert(Create(input: input, output: output, type: type), at: 0)
         }
 
         if runners.isEmpty {

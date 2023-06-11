@@ -15,20 +15,19 @@ extension ArgumentHelp {
 
     static let output: Self = """
         Output path of the created icon. If this option is not present, defaults \
-        to the same directory as input, with a file extension specified by '--type'.
+        to same as input, with a path extension specified by '--type'.
         """
 
     static let type = Self(
         "Output type:",
         discussion: """
             icns              - An icns icon file.
-            iconset           - A bundled iconset folder.
-            infer             - Infer the type based on the output file extension.
+            iconset           - An iconset folder.
+            infer             - Infer the type from the output path extension.
             """
     )
 
     static let isIconSet: Self = """
-        *** DEPRECATED *** use '--type' instead.
         Convert the input into an iconset file instead of inferring the type from \
         the output path extension.
         """
@@ -41,7 +40,7 @@ extension ArgumentHelp {
 extension NameSpecification {
     static let type: Self = .customLong("type")
     static let isIconSet: Self = [.customShort("s"), .customLong("iconset")]
-    static let listFormats: Self = [.customShort("l"), .customLong("list")]
+    static let listFormats: Self = .customLong("formats")
 }
 
 // MARK: - HelpGenerator
