@@ -5,13 +5,17 @@
 
 import ArgumentParser
 
+// MARK: - OutputType
+
 enum OutputType: String, CaseIterable, ExpressibleByArgument {
     case icns = "icns"
     case iconSet = "iconset"
     case infer = "infer"
 }
 
-struct SharedOptions: ParsableArguments {
+// MARK: - MainOptions
+
+struct MainOptions: ParsableArguments {
     @Argument(help: .input)
     var input: String?
     @Argument(help: .output)
@@ -22,18 +26,22 @@ struct SharedOptions: ParsableArguments {
     var listFormats = false
 }
 
+// MARK: - DeprecatedOptions
+
 struct DeprecatedOptions: ParsableArguments {
     @Flag(name: .isIconSet, help: .isIconSet)
     var isIconSet = false
 }
 
+// MARK: - AllOptions
+
 @dynamicMemberLookup
-struct DefaultOptions: ParsableArguments {
-    @OptionGroup var shared: SharedOptions
+struct AllOptions: ParsableArguments {
+    @OptionGroup var main: MainOptions
     @OptionGroup var deprecated: DeprecatedOptions
 
-    subscript<Value>(dynamicMember keyPath: KeyPath<SharedOptions, Value>) -> Value {
-        shared[keyPath: keyPath]
+    subscript<Value>(dynamicMember keyPath: KeyPath<MainOptions, Value>) -> Value {
+        main[keyPath: keyPath]
     }
 
     subscript<Value>(dynamicMember keyPath: KeyPath<DeprecatedOptions, Value>) -> Value {

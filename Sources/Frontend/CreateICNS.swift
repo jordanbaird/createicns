@@ -17,7 +17,7 @@ struct CreateICNS: ParsableCommand {
         version: "0.0.4"
     )
 
-    @OptionGroup var options: DefaultOptions
+    @OptionGroup var options: AllOptions
 
     func run() throws {
         do {

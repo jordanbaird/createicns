@@ -5,6 +5,8 @@
 
 import ArgumentParser
 
+// MARK: - ArgumentHelp
+
 extension ArgumentHelp {
     static let input: Self = """
         Path to an input image. Most common bitmap formats are supported. Image \
@@ -34,11 +36,15 @@ extension ArgumentHelp {
     static let listFormats: Self = "List valid input formats."
 }
 
+// MARK: - NameSpecification
+
 extension NameSpecification {
     static let type: Self = .customLong("type")
     static let isIconSet: Self = [.customShort("s"), .customLong("iconset")]
     static let listFormats: Self = [.customShort("l"), .customLong("list")]
 }
+
+// MARK: - HelpGenerator
 
 /// A type that generates a shortened version of a base command's help message.
 enum HelpGenerator<Base: ParsableCommand> {
