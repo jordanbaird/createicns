@@ -8,28 +8,24 @@ import Backend
 
 @main
 struct CreateICNS: ParsableCommand {
+    static let commandName = "createicns"
+
     static let configuration = CommandConfiguration(
-        commandName: "createicns",
+        commandName: commandName,
         abstract: "Create an icns or iconset file from an image.",
+        usage: "\(commandName) [<options>] <input> [<output>]",
         version: "0.0.4"
     )
 
-    @Argument(help: .input)
-    var input: String?
-    @Argument(help: .output)
-    var output: String?
-    @Flag(name: .isIconSet, help: .isIconSet)
-    var isIconSet = false
-    @Flag(name: .listFormats, help: .listFormats)
-    var listFormats = false
+    @OptionGroup var options: DefaultOptions
 
     func run() throws {
         do {
             try MainRunner(
-                input: input,
-                output: output,
-                isIconSet: isIconSet,
-                listFormats: listFormats,
+                input: options.input,
+                output: options.output,
+                isIconSet: options.isIconSet,
+                listFormats: options.listFormats,
                 helpMessage: HelpGenerator<Self>.generate
             ).run()
         } catch {
