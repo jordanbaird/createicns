@@ -5,65 +5,30 @@
 
 import Foundation
 
-private let pathSeparator = "/"
+// MARK: - Helpers
 
-private func pathIsDirectory(_ path: String, hint: FileInfo.DirectoryHint) -> Bool {
-    switch hint {
-    case .isDirectory:
-        return true
-    case .notDirectory:
-        return false
-    case .checkFileSystem:
-        var b: ObjCBool = false
-        return FileManager.default.fileExists(atPath: path, isDirectory: &b) && b.boolValue
-    case .inferFromPath:
-        return path.hasSuffix(pathSeparator)
-    }
-}
+/// A namespace for `FileInfo` helper functions.
+private enum Helpers {
+    private static let pathSeparator = "/"
 
-private func joinedAsPath<S: Sequence>(components: S) -> String where S.Element: StringProtocol {
-    components.joined(separator: pathSeparator)
-}
-
-// MARK: - FileRepresentation
-
-/// A representation of a file containing a standardized path string and url.
-private struct FileRepresentation {
-    /// A standardized url representing the file.
-    let url: URL
-
-    /// A standardized path string representing the file.
-    var path: String {
-        if let components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
-            return components.percentEncodedPath
+    static func pathIsDirectory(_ path: String, hint: FileInfo.DirectoryHint) -> Bool {
+        switch hint {
+        case .isDirectory:
+            return true
+        case .notDirectory:
+            return false
+        case .checkFileSystem:
+            var b: ObjCBool = false
+            return FileManager.default.fileExists(atPath: path, isDirectory: &b) && b.boolValue
+        case .inferFromPath:
+            return path.hasSuffix(pathSeparator)
         }
-        return url.path
     }
 
-    /// Creates a representation by standardizing the given file url.
-    private init(standardizing fileURL: URL) {
-        self.url = fileURL.standardizedFileURL
-    }
-
-    /// Creates a representation from a standardized version of the given url.
-    init(fileURL: URL) {
-        self.init(standardizing: fileURL)
-    }
-
-    /// Creates a representation from a standardized version of the given path string.
-    init(filePath: String) {
-        self.init(fileURL: URL(fileURLWithPath: filePath))
+    static func joinedAsPath<S: Sequence>(components: S) -> String where S.Element: StringProtocol {
+        components.joined(separator: pathSeparator)
     }
 }
-
-// MARK: FileRepresentation: Codable
-extension FileRepresentation: Codable { }
-
-// MARK: FileRepresentation: Equatable
-extension FileRepresentation: Equatable { }
-
-// MARK: FileRepresentation: Hashable
-extension FileRepresentation: Hashable { }
 
 // MARK: - FileInfo
 
@@ -92,17 +57,15 @@ struct FileInfo {
 
     // MARK: Properties
 
-    /// The file information's underlying representation.
-    private let representation: FileRepresentation
-
     /// The standardized url associated with this file information.
-    var url: URL {
-        representation.url
-    }
+    let url: URL
 
     /// The standardized path associated with this file information.
     var path: String {
-        representation.path
+        if let components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
+            return components.percentEncodedPath
+        }
+        return url.path
     }
 
     /// The last path component of the file information.
@@ -124,14 +87,14 @@ struct FileInfo {
     /// A Boolean value that indicates whether the path associated with the file
     /// information points to a valid directory.
     var isDirectory: Bool {
-        pathIsDirectory(path, hint: .checkFileSystem)
+        Helpers.pathIsDirectory(path, hint: .checkFileSystem)
     }
 
     // MARK: Initializers
 
     /// Creates a file information instance from the given url.
     init(url: URL) {
-        self.representation = FileRepresentation(fileURL: url)
+        self.url = url.standardizedFileURL
     }
 
     /// Creates a file information instance from the given path and directory hint,
@@ -142,7 +105,7 @@ struct FileInfo {
         relativeTo base: Self? = nil
     ) {
         let path = String(path)
-        let isDirectory = pathIsDirectory(path, hint: directoryHint)
+        let isDirectory = Helpers.pathIsDirectory(path, hint: directoryHint)
         let url = URL(fileURLWithPath: path, isDirectory: isDirectory, relativeTo: base?.url)
         self.init(url: url)
     }
@@ -164,7 +127,7 @@ struct FileInfo {
         components: S...,
         directoryHint: DirectoryHint = .inferFromPath
     ) -> Self {
-        appending(path: joinedAsPath(components: components), directoryHint: directoryHint)
+        appending(path: Helpers.joinedAsPath(components: components), directoryHint: directoryHint)
     }
 
     /// Returns a new file information instance by appending the given path component
