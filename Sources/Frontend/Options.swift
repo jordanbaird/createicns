@@ -6,9 +6,9 @@
 import ArgumentParser
 
 enum OutputType: String, CaseIterable, ExpressibleByArgument {
-    case icns
-    case iconSet
-    case infer
+    case icns = "icns"
+    case iconSet = "iconset"
+    case infer = "infer"
 }
 
 struct SharedOptions: ParsableArguments {
