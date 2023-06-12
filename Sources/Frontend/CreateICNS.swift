@@ -20,16 +20,12 @@ struct CreateICNS: ParsableCommand {
     @OptionGroup var options: Options
 
     func run() throws {
-        do {
-            try MainRunner(
-                input: options.input,
-                output: options.output,
-                type: options.type,
-                listFormats: options.listFormats,
-                helpMessage: HelpGenerator<Self>.generate
-            ).run()
-        } catch {
-            throw error.formatted
-        }
+        try MainRunner(
+            input: options.input,
+            output: options.output,
+            type: options.type,
+            listFormats: options.listFormats,
+            helpMessage: HelpGenerator<Self>.generate
+        ).run()
     }
 }

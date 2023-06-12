@@ -9,7 +9,7 @@ import Foundation
 
 /// An error type that is displayed in a formatted representation when printed
 /// to a command line interface.
-public protocol FormattedError: Error {
+public protocol FormattedError: Error, TextOutputStreamable {
     /// The formatted message to display.
     ///
     /// If one of either standard output or standard error does not point to a
@@ -17,29 +17,9 @@ public protocol FormattedError: Error {
     var message: FormattedText { get }
 }
 
-// MARK: FormattedErrorWrapper
-
-private struct FormattedErrorWrapper: FormattedError, CustomStringConvertible {
-    let error: Error
-
-    var message: FormattedText {
-        if let error = error as? FormattedError {
-            return error.message
-        }
-        return FormattedText(contentsOf: String(describing: error))
-    }
-
-    var description: String {
-        String(describing: message)
-    }
-}
-
-// MARK: Error Extension
-
-extension Error {
-    /// Returns a formatted error that wraps this error.
-    public var formatted: some FormattedError {
-        FormattedErrorWrapper(error: self)
+extension FormattedError {
+    public func write<Target: TextOutputStream>(to target: inout Target) {
+        message.write(to: &target)
     }
 }
 
