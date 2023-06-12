@@ -5,7 +5,7 @@
 
 import Darwin
 
-// MARK: TextOutputColor
+// MARK: - TextOutputColor
 
 /// Colors to use to format text when displayed in a command line interface.
 public enum TextOutputColor {
@@ -45,7 +45,7 @@ public enum TextOutputColor {
     }
 }
 
-// MARK: TextOutputStyle
+// MARK: - TextOutputStyle
 
 /// Styles to use to format text when displayed in a command line interface.
 public enum TextOutputStyle {
@@ -72,6 +72,8 @@ public enum TextOutputStyle {
         }
     }
 }
+
+// MARK: - FormattingComponent
 
 private enum FormattingComponent {
     case unformatted(String)
@@ -112,7 +114,7 @@ private enum FormattingComponent {
     }
 }
 
-// MARK: FormattedText
+// MARK: - FormattedText
 
 /// Text that is displayed in a formatted representation when printed to a
 /// command line interface.
