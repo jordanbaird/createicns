@@ -11,7 +11,7 @@ struct Version {
     /// The minor version.
     let minor: Int
 
-    /// The path version.
+    /// The patch version.
     let patch: Int
 
     /// The full version string.
