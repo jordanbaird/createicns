@@ -3,8 +3,6 @@
 // createicns
 //
 
-import Foundation
-
 /// A runner that lists the tool's valid input formats.
 struct ListFormats: Runner {
     /// Creates a text table with the given header and columns.

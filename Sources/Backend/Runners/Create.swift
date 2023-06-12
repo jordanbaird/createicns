@@ -3,8 +3,6 @@
 // createicns
 //
 
-import Foundation
-
 /// A runner that manages the creation and output of icns and iconset files.
 struct Create: Runner {
     /// The location of the initial image data.
