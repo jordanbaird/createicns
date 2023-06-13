@@ -22,19 +22,24 @@ struct Options: ParsableArguments {
     var type: OutputType = .infer
 
     @Flag(name: .isIconSet, help: .isIconSet) // deprecated
-    var isIconSet = false
+    private var isIconSet = false
 
     @Flag(name: .listFormats, help: .listFormats)
     var listFormats = false
 
     mutating func validate() throws {
         if isIconSet {
-            isIconSet = false
-            type = .iconSet // Set the type explicitly to simulate the behavior of --iconset.
-            var warningMessage: FormattedText = "\("warning:", color: .yellow, style: .bold) "
-            warningMessage.append("'\("-s, --iconset", color: .yellow)' is deprecated: ")
-            warningMessage.append("use '\("--type", color: .cyan)' instead.")
-            print(warningMessage)
+            type = .iconSet // Set the type to simulate the behavior of --iconset
+            print(
+                FormattedText("warning:", color: .yellow, style: .bold)
+                    .appending(" '")
+                    .appending("-s", color: .yellow)
+                    .appending(", ")
+                    .appending("--iconset", color: .yellow)
+                    .appending("' is deprecated: use '")
+                    .appending("--type", color: .cyan)
+                    .appending("' instead.")
+            )
         }
     }
 }

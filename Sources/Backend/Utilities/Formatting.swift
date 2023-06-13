@@ -7,7 +7,7 @@ import Darwin
 
 // MARK: - TextOutputColor
 
-/// Colors to use to format text when displayed in a command line interface.
+/// Colors to use to format text when displayed in a terminal.
 public enum TextOutputColor {
     /// Formats the text in red.
     case red
@@ -47,7 +47,7 @@ public enum TextOutputColor {
 
 // MARK: - TextOutputStyle
 
-/// Styles to use to format text when displayed in a command line interface.
+/// Styles to use to format text when displayed in a terminal.
 public enum TextOutputStyle {
     /// Formats the text in bold.
     case bold
@@ -116,11 +116,10 @@ private enum FormattingComponent {
 
 // MARK: - FormattedText
 
-/// Text that is displayed in a formatted representation when printed to a
-/// command line interface.
+/// Text that is displayed in a formatted representation when printed to a terminal.
 public struct FormattedText {
     /// The components that make up this text instance.
-    private var components: [FormattingComponent]
+    private let components: [FormattingComponent]
 
     /// Creates a text instance with the given components.
     private init(components: [FormattingComponent]) {
@@ -132,36 +131,86 @@ public struct FormattedText {
         self.init(components: [])
     }
 
-    /// Creates a text instance with a textual representation of the given value,
-    /// displayed with the given color and style.
+    /// Creates a text instance with a formatted representation of the given value.
     public init<Value: CustomStringConvertible>(
         _ value: Value,
-        color: TextOutputColor? = nil,
-        style: TextOutputStyle? = nil
+        color: TextOutputColor,
+        style: TextOutputStyle
     ) {
         self.init(components: [
             .component(value: value, color: color, style: style),
         ])
     }
 
-    /// Creates a text instance with the same components as the given instance.
-    public init(_ formattedText: Self) {
-        self.init(components: formattedText.components)
+    /// Creates a text instance with a formatted representation of the given value.
+    public init<Value: CustomStringConvertible>(_ value: Value, color: TextOutputColor) {
+        self.init(components: [
+            .component(value: value, color: color, style: nil),
+        ])
     }
 
-    /// Creates a text instance with the contents of the given string.
-    public init(contentsOf string: String) {
-        self.init(components: [.unformatted(string)])
+    /// Creates a text instance with a formatted representation of the given value.
+    public init<Value: CustomStringConvertible>(_ value: Value, style: TextOutputStyle) {
+        self.init(components: [
+            .component(value: value, color: nil, style: style),
+        ])
+    }
+
+    /// Creates a text instance with the same components as the given instance.
+    public init(_ text: Self) {
+        self.init(components: text.components)
+    }
+
+    /// Returns a new text instance by appending the components in the given text
+    /// instance to this instance's components.
+    public func appending(_ text: Self) -> Self {
+        Self(components: components + text.components)
+    }
+
+    /// Returns a new text instance by appending a formatted representation of the
+    /// given value.
+    public func appending<Value: CustomStringConvertible>(
+        _ value: Value,
+        color: TextOutputColor,
+        style: TextOutputStyle
+    ) -> Self {
+        appending(Self(value, color: color, style: style))
+    }
+
+    /// Returns a new text instance by appending a formatted representation of the
+    /// given value.
+    public func appending<Value: CustomStringConvertible>(_ value: Value, color: TextOutputColor) -> Self {
+        appending(Self(value, color: color))
+    }
+
+    /// Returns a new text instance by appending a formatted representation of the
+    /// given value.
+    public func appending<Value: CustomStringConvertible>(_ value: Value, style: TextOutputStyle) -> Self {
+        appending(Self(value, style: style))
     }
 
     /// Appends the components in the given text instance to this instance's components.
-    public mutating func append(_ other: Self) {
-        components.append(contentsOf: other.components)
+    public mutating func append(_ text: Self) {
+        self = appending(text)
     }
 
-    /// Appends the contents of the given string to this text instance.
-    public mutating func append(contentsOf string: String) {
-        append(Self(contentsOf: string))
+    /// Appends a formatted representation of the given value.
+    public mutating func append<Value: CustomStringConvertible>(
+        _ value: Value,
+        color: TextOutputColor,
+        style: TextOutputStyle
+    ) {
+        self = appending(value, color: color, style: style)
+    }
+
+    /// Appends a formatted representation of the given value.
+    public mutating func append<Value: CustomStringConvertible>(_ value: Value, color: TextOutputColor) {
+        self = appending(value, color: color)
+    }
+
+    /// Appends a formatted representation of the given value.
+    public mutating func append<Value: CustomStringConvertible>(_ value: Value, style: TextOutputStyle) {
+        self = appending(value, style: style)
     }
 }
 
@@ -183,7 +232,7 @@ extension FormattedText: TextOutputStreamable {
 // MARK: FormattedText: ExpressibleByStringLiteral
 extension FormattedText: ExpressibleByStringLiteral {
     public init(stringLiteral value: String) {
-        self.init(contentsOf: value)
+        self.init(components: [.unformatted(value)])
     }
 }
 
@@ -194,18 +243,46 @@ extension FormattedText: ExpressibleByStringInterpolation {
 
         public init(literalCapacity: Int, interpolationCount: Int) { }
 
+        private mutating func appendComponents(_ components: [FormattingComponent]) {
+            self.components.append(contentsOf: components)
+        }
+
+        private mutating func appendComponent(_ component: FormattingComponent) {
+            appendComponents([component])
+        }
+
         public mutating func appendLiteral(_ literal: String) {
-            components.append(.unformatted(literal))
+            appendComponent(.unformatted(literal))
         }
 
         public mutating func appendInterpolation<Value: CustomStringConvertible>(
             _ value: Value,
-            color: TextOutputColor? = nil,
-            style: TextOutputStyle? = nil
+            color: TextOutputColor,
+            style: TextOutputStyle
         ) {
-            components.append(
-                .component(value: value, color: color, style: style)
-            )
+            appendComponent(.component(value: value, color: color, style: style))
+        }
+
+        public mutating func appendInterpolation<Value: CustomStringConvertible>(
+            _ value: Value,
+            color: TextOutputColor
+        ) {
+            appendComponent(.component(value: value, color: color, style: nil))
+        }
+
+        public mutating func appendInterpolation<Value: CustomStringConvertible>(
+            _ value: Value,
+            style: TextOutputStyle
+        ) {
+            appendComponent(.component(value: value, color: nil, style: style))
+        }
+
+        public mutating func appendInterpolation<Value: CustomStringConvertible>(_ value: Value) {
+            appendComponent(.component(value: value, color: nil, style: nil))
+        }
+
+        public mutating func appendInterpolation(_ text: FormattedText) {
+            appendComponents(text.components)
         }
     }
 
