@@ -16,15 +16,15 @@ public struct MainRunner: Runner {
         type: OutputType,
         listFormats: Bool,
         helpMessage: @escaping () -> String
-    ) throws {
+    ) {
         var runners = [Runner]()
+
+        if let input {
+            runners.append(Create(input: input, output: output, type: type))
+        }
 
         if listFormats {
             runners.append(ListFormats())
-        }
-
-        if let input {
-            try runners.insert(Create(input: input, output: output, type: type), at: 0)
         }
 
         if runners.isEmpty {
@@ -34,7 +34,14 @@ public struct MainRunner: Runner {
         self.runners = runners
     }
 
+    public func validate() throws {
+        for runner in runners {
+            try runner.validate()
+        }
+    }
+
     public func run() throws {
+        try validate()
         for runner in runners {
             try runner.run()
         }

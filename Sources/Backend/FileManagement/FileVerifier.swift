@@ -79,16 +79,14 @@ struct FileVerifier {
             case .isNotDirectory(let path):
                 return "'\(path, color: .yellow)' is not a directory"
             case .invalidPathExtension(let pathExtension, let outputType):
-                var result = FormattedText("Invalid path extension '\(pathExtension, color: .yellow, style: .bold)'")
+                let start: FormattedText = "Invalid path extension '\(pathExtension, color: .yellow, style: .bold)'"
                 guard let outputType else {
-                    return result
+                    return start
                 }
                 if let type = outputType.preferredFilenameExtension {
-                    result.append(" for expected output type '\(type, color: .cyan, style: .bold)'")
-                } else {
-                    result.append(" for unknown output type")
+                    return start + " for expected output type '\(type, color: .cyan, style: .bold)'"
                 }
-                return result
+                return start + " for unknown output type"
             }
         }
     }

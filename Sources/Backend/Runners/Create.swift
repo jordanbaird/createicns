@@ -5,6 +5,9 @@
 
 /// A runner that manages the creation and output of icns and iconset files.
 struct Create: Runner {
+    /// The output file type.
+    let fileType: FileType
+
     /// The location of the initial image data.
     let inputInfo: FileInfo
 
@@ -21,7 +24,7 @@ struct Create: Runner {
     let writer: IconSetWriter
 
     /// Creates a runner with the given input path, output path, and output type.
-    init(input: String, output: String?, type: OutputType) throws {
+    init(input: String, output: String?, type: OutputType) {
         let fileType: FileType
         let actionMessage: String
         let successMessage: String
@@ -74,6 +77,15 @@ struct Create: Runner {
             return info
         }()
 
+        self.fileType = fileType
+        self.inputInfo = inputInfo
+        self.outputInfo = outputInfo
+        self.actionMessage = actionMessage
+        self.successMessage = successMessage
+        self.writer = writer
+    }
+
+    func validate() throws {
         let inputVerifier = FileVerifier(options: [
             .fileExists,
             .isDirectory.inverted,
@@ -83,12 +95,8 @@ struct Create: Runner {
             .isDirectory.inverted,
             .isFileType(fileType),
         ])
-
-        self.inputInfo = try inputVerifier.verify(info: inputInfo)
-        self.outputInfo = try outputVerifier.verify(info: outputInfo)
-        self.actionMessage = actionMessage
-        self.successMessage = successMessage
-        self.writer = writer
+        try inputVerifier.verify(info: inputInfo)
+        try outputVerifier.verify(info: outputInfo)
     }
 
     func run() throws {

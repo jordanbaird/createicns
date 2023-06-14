@@ -5,29 +5,24 @@
 
 import Foundation
 
-// MARK: - Helpers
+private let pathSeparator = "/"
 
-/// A namespace for `FileInfo` helper functions.
-private enum Helpers {
-    private static let pathSeparator = "/"
-
-    static func pathIsDirectory(_ path: String, hint: FileInfo.DirectoryHint) -> Bool {
-        switch hint {
-        case .isDirectory:
-            return true
-        case .notDirectory:
-            return false
-        case .checkFileSystem:
-            var b: ObjCBool = false
-            return FileManager.default.fileExists(atPath: path, isDirectory: &b) && b.boolValue
-        case .inferFromPath:
-            return path.hasSuffix(pathSeparator)
-        }
+private func pathIsDirectory(_ path: String, hint: FileInfo.DirectoryHint) -> Bool {
+    switch hint {
+    case .isDirectory:
+        return true
+    case .notDirectory:
+        return false
+    case .checkFileSystem:
+        var b: ObjCBool = false
+        return FileManager.default.fileExists(atPath: path, isDirectory: &b) && b.boolValue
+    case .inferFromPath:
+        return path.hasSuffix(pathSeparator)
     }
+}
 
-    static func joinedAsPath<S: Sequence>(components: S) -> String where S.Element: StringProtocol {
-        components.joined(separator: pathSeparator)
-    }
+private func joinPathComponents<S: Sequence>(_ components: S) -> String where S.Element: StringProtocol {
+    components.joined(separator: pathSeparator)
 }
 
 // MARK: - FileInfo
@@ -87,7 +82,7 @@ struct FileInfo {
     /// A Boolean value that indicates whether the path associated with the file
     /// information points to a valid directory.
     var isDirectory: Bool {
-        Helpers.pathIsDirectory(path, hint: .checkFileSystem)
+        pathIsDirectory(path, hint: .checkFileSystem)
     }
 
     /// The file type associated with the file information's path extension.
@@ -110,7 +105,7 @@ struct FileInfo {
         relativeTo base: Self? = nil
     ) {
         let path = String(path)
-        let isDirectory = Helpers.pathIsDirectory(path, hint: directoryHint)
+        let isDirectory = pathIsDirectory(path, hint: directoryHint)
         let url = URL(fileURLWithPath: path, isDirectory: isDirectory, relativeTo: base?.url)
         self.init(url: url)
     }
@@ -132,7 +127,7 @@ struct FileInfo {
         components: S...,
         directoryHint: DirectoryHint = .inferFromPath
     ) -> Self {
-        appending(path: Helpers.joinedAsPath(components: components), directoryHint: directoryHint)
+        appending(path: joinPathComponents(components), directoryHint: directoryHint)
     }
 
     /// Returns a new file information instance by appending the given path component
