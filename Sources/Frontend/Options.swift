@@ -21,8 +21,8 @@ struct Options: ParsableArguments {
     @Option(name: .type, help: .type)
     var type: OutputType = .infer
 
-    @Flag(name: .isIconSet, help: .isIconSet) // deprecated
-    private var isIconSet = false
+    @Flag(name: .isIconSet, help: .isIconSet)
+    private var isIconSet = false // deprecated
 
     @Flag(name: .listFormats, help: .listFormats)
     var listFormats = false
