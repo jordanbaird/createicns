@@ -6,6 +6,20 @@
 import CoreGraphics
 import Foundation
 import ImageIO
+import SwiftDraw
+
+private func getScaleFactor(forSize size: CGSize, minDimension: CGFloat, maxDimension: CGFloat) -> CGFloat {
+    let minDimension = max(min(size.width, size.height), minDimension)
+    var scaleFactor = maxDimension / minDimension
+    if scaleFactor > 2 {
+        scaleFactor = CGFloat(Int(scaleFactor / 2)) * 2
+    } else if scaleFactor > 1 {
+        scaleFactor.round()
+    } else {
+        scaleFactor = CGFloat(Int(scaleFactor * 10)) / 10
+    }
+    return scaleFactor
+}
 
 /// A type that contains writable image data.
 struct Image {
@@ -38,6 +52,7 @@ struct Image {
     private enum ImageCreationError: String, FormattedError {
         case graphicsContextError = "Error with graphics context."
         case pdfDocumentError = "Error with PDF document."
+        case svgCreationError = "Error creating image data from SVG."
         case invalidImageFormat = "File is not a valid image format."
         case invalidDimensions = "Image width and height must be equal."
         case invalidData = "Invalid image data."
@@ -58,7 +73,10 @@ struct Image {
 
     /// The valid file types for an image.
     static let validTypes: Set<FileType> = {
-        let prevalidatedTypes: Set<FileType> = [.pdf]
+        let prevalidatedTypes: Set<FileType> = [
+            .pdf,
+            .svg,
+        ]
         guard let identifiers = CGImageSourceCopyTypeIdentifiers() as? [String] else {
             return prevalidatedTypes
         }
@@ -97,16 +115,9 @@ struct Image {
                     throw ImageCreationError.pdfDocumentError
                 }
                 let mediaBox = page.getBoxRect(.mediaBox)
-                // Scale down images that are > 4x the size of the largest image we need to produce.
-                let maxDimension: CGFloat = 1024 * 4
-                var scaleFactor = maxDimension / min(mediaBox.width, mediaBox.height)
-                if scaleFactor > 2 {
-                    scaleFactor = CGFloat(Int(scaleFactor / 2)) * 2
-                } else if scaleFactor > 1 {
-                    scaleFactor.round()
-                } else {
-                    scaleFactor = CGFloat(Int(scaleFactor * 10)) / 10
-                }
+                // 1024x1024 is the size of the largest image we need to produce.
+                // Scale down if more than 4 times larger.
+                let scaleFactor = getScaleFactor(forSize: mediaBox.size, minDimension: 0, maxDimension: 1024 * 4)
                 let destRect = mediaBox.applying(CGAffineTransform(scaleX: scaleFactor, y: scaleFactor))
                 let context = try ContextDefaults.makeContext(size: destRect.size)
                 context.scaleBy(x: scaleFactor, y: scaleFactor)
@@ -116,6 +127,31 @@ struct Image {
                     throw ImageCreationError.graphicsContextError
                 }
                 return image
+            })
+        case .svg:
+            self.init(makeCGImage: {
+                let svg = try OutputHandle.standardError.redirect {
+                    guard let svg = SVG(fileURL: url) else {
+                        throw ImageCreationError.svgCreationError
+                    }
+                    return svg
+                }
+                // 1024x1024 is the size of the largest image we need to produce.
+                // Scale up if smaller. Scale down if more than 4 times larger.
+                let scaleFactor = getScaleFactor(forSize: svg.size, minDimension: 1024, maxDimension: 1024 * 4)
+                let data = try svg.pngData(size: svg.size, scale: scaleFactor)
+                let options: [CFString: CFTypeRef] = [
+                    kCGImageSourceTypeIdentifierHint: FileType.png.identifier as CFString,
+                    kCGImageSourceShouldCache: kCFBooleanTrue,
+                    kCGImageSourceShouldAllowFloat: kCFBooleanTrue,
+                ]
+                guard
+                    let source = CGImageSourceCreateWithData(data as CFData, options as CFDictionary),
+                    let cgImage = CGImageSourceCreateImageAtIndex(source, 0, options as CFDictionary)
+                else {
+                    throw ImageCreationError.invalidSource
+                }
+                return cgImage
             })
         default:
             self.init(makeCGImage: {
