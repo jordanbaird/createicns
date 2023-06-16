@@ -107,9 +107,9 @@ extension OutputHandle: Hashable {
 
 // MARK: OutputHandle: TextOutputStream
 extension OutputHandle: TextOutputStream {
-    private func write<S: Sequence>(_ elements: S, to fileHandle: FileHandle) throws where S.Element == UInt8 {
+    private func write<S: Sequence>(_ elements: S, to fileHandle: FileHandle) where S.Element == UInt8 {
         if #available(macOS 10.15.4, *) {
-            try fileHandle.write(contentsOf: Data(elements))
+            try! fileHandle.write(contentsOf: Data(elements))
         } else {
             fileHandle.write(Data(elements))
         }
@@ -118,9 +118,9 @@ extension OutputHandle: TextOutputStream {
     public func write(_ string: String) {
         switch kind {
         case .fileDescriptor(let fd):
-            try! write(string.utf8, to: FileHandle(fileDescriptor: fd, closeOnDealloc: false))
+            write(string.utf8, to: FileHandle(fileDescriptor: fd, closeOnDealloc: false))
         case .outputPipe(let pipe):
-            try! write(string.utf8, to: pipe.fileHandleForWriting)
+            write(string.utf8, to: pipe.fileHandleForWriting)
         }
     }
 }
