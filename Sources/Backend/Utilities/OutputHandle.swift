@@ -56,6 +56,8 @@ public struct OutputHandle {
     /// The standard error handle.
     public static let standardError  = OutputHandle(kind: .fileDescriptor(STDERR_FILENO))
 
+    // MARK: Instance Methods
+
     /// Performs the given closure while redirecting the output of this handle
     /// into another handle.
     ///
