@@ -26,8 +26,8 @@ struct ListFormats: Runner {
                 innerState.cellCount += 1
             }
 
-            // Append a new padded column value, consisting of the padded cells,
-            // the max length, and the cell count.
+            // Append a new padded column value consisting of the padded cells, max
+            // length, and cell count.
             outerState.paddedColumns.append((cells, length, cellCount))
 
             if cellCount > outerState.maxCellCount {

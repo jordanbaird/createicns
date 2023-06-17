@@ -43,7 +43,7 @@ struct Create: Runner {
                 {
                     return outputFileType == .iconSet
                 }
-                // FIXME: Should throw an error instead of assuming false.
+                // FIXME: Somehow handle this instead of assuming false.
                 return false
             }
         }()
@@ -104,6 +104,6 @@ struct Create: Runner {
         let image = try Image(url: inputInfo.url)
         let iconSet = IconSet(image: image)
         try writer.write(iconSet, to: outputInfo.url)
-        print(FormattedText(successMessage, color: .green))
+        print(successMessage.formatted(color: .green))
     }
 }
