@@ -85,29 +85,33 @@ extension FileType {
     static let image: Self = {
         if #available(macOS 11.0, *) {
             return Self(utType: .image)
+        } else {
+            return Self(kUTTypeImage as String)
         }
-        return Self(kUTTypeImage as String)
     }()
 
     static let bmp: Self = {
         if #available(macOS 11.0, *) {
             return Self(utType: .bmp)
+        } else {
+            return Self(kUTTypeBMP as String)
         }
-        return Self(kUTTypeBMP as String)
     }()
 
     static let gif: Self = {
         if #available(macOS 11.0, *) {
             return Self(utType: .gif)
+        } else {
+            return Self(kUTTypeGIF as String)
         }
-        return Self(kUTTypeGIF as String)
     }()
 
     static let icns: Self = {
         if #available(macOS 11.0, *) {
             return Self(utType: .icns)
+        } else {
+            return Self(kUTTypeAppleICNS as String)
         }
-        return Self(kUTTypeAppleICNS as String)
     }()
 
     static let iconset = Self("com.apple.iconset")
@@ -115,57 +119,65 @@ extension FileType {
     static let ico: Self = {
         if #available(macOS 11.0, *) {
             return Self(utType: .ico)
+        } else {
+            return Self(kUTTypeICO as String)
         }
-        return Self(kUTTypeICO as String)
     }()
 
     static let jpeg: Self = {
         if #available(macOS 11.0, *) {
             return Self(utType: .jpeg)
+        } else {
+            return Self(kUTTypeJPEG as String)
         }
-        return Self(kUTTypeJPEG as String)
     }()
 
     static let pdf: Self = {
         if #available(macOS 11.0, *) {
             return Self(utType: .pdf)
+        } else {
+            return Self(kUTTypePDF as String)
         }
-        return Self(kUTTypePDF as String)
     }()
 
     static let png: Self = {
         if #available(macOS 11.0, *) {
             return Self(utType: .png)
+        } else {
+            return Self(kUTTypePNG as String)
         }
-        return Self(kUTTypePNG as String)
     }()
 
     static let rawImage: Self = {
         if #available(macOS 11.0, *) {
             return Self(utType: .rawImage)
+        } else {
+            return Self(kUTTypeRawImage as String)
         }
-        return Self(kUTTypeRawImage as String)
     }()
 
     static let svg: Self = {
         if #available(macOS 11.0, *) {
             return Self(utType: .svg)
+        } else {
+            return Self(kUTTypeScalableVectorGraphics as String)
         }
-        return Self(kUTTypeScalableVectorGraphics as String)
     }()
 
     static let tiff: Self = {
         if #available(macOS 11.0, *) {
             return Self(utType: .tiff)
+        } else {
+            return Self(kUTTypeTIFF as String)
         }
-        return Self(kUTTypeTIFF as String)
     }()
 
     static let webP: Self = {
         if #available(macOS 11.0, *) {
             return Self(utType: .webP)
+        } else {
+            return Self("org.webmproject.webp")
         }
-        return Self("org.webmproject.webp")
     }()
 }
 
@@ -178,9 +190,7 @@ extension FileType: Comparable {
 
 // MARK: FileType: CustomStringConvertible
 extension FileType: CustomStringConvertible {
-    var description: String {
-        identifier
-    }
+    var description: String { identifier }
 }
 
 // MARK: FileType: Equatable

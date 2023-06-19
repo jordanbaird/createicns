@@ -39,9 +39,9 @@ struct Create: Runner {
             case .infer:
                 if
                     let output,
-                    let outputFileType = FileInfo(path: output).fileType
+                    let fileType = FileInfo(path: output).fileType
                 {
-                    return outputFileType == .iconset
+                    return fileType == .iconset
                 }
                 // FIXME: Somehow handle this instead of assuming false.
                 return false
