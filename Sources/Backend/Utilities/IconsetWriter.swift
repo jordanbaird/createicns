@@ -1,12 +1,12 @@
 //
-// IconSetWriter.swift
+// IconsetWriter.swift
 // createicns
 //
 
 import Foundation
 
 /// A type that writes an iconset to an output url.
-enum IconSetWriter {
+enum IconsetWriter {
     /// The iconset is written directly to the output url in the form of an ICNS file.
     case direct
 
@@ -16,12 +16,12 @@ enum IconSetWriter {
 
     /// Writes the given iconset to the given output url using the method specified
     /// by this writer.
-    func write(_ iconSet: IconSet, to outputURL: URL) throws {
+    func write(_ iconset: Iconset, to outputURL: URL) throws {
         switch self {
         case .direct:
-            try iconSet.write(to: outputURL)
+            try iconset.write(to: outputURL)
         case .iconUtil:
-            try IconUtil.write(iconSet, to: outputURL)
+            try IconUtil.write(iconset, to: outputURL)
         }
     }
 }

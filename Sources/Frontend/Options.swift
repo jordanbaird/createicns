@@ -21,15 +21,15 @@ struct Options: ParsableArguments {
     @Option(name: .type, help: .type)
     var type: OutputType = .infer
 
-    @Flag(name: .isIconSet, help: .isIconSet)
-    private var isIconSet = false // deprecated
+    @Flag(name: .isIconset, help: .isIconset)
+    private var isIconset = false // deprecated
 
     @Flag(name: .listFormats, help: .listFormats)
     var listFormats = false
 
     mutating func validate() throws {
-        if isIconSet {
-            type = .iconSet // Set the type to simulate the behavior of --iconset
+        if isIconset {
+            type = .iconset // Set the type to simulate the behavior of --iconset
             print(
                 FormattedText("warning:", color: .yellow, style: .bold)
                     .appending(" '")

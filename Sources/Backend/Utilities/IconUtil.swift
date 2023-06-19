@@ -8,7 +8,7 @@ import Foundation
 /// Wraps the `iconutil` command line utility.
 enum IconUtil {
     /// Writes the given iconset to the given output url.
-    static func write(_ iconSet: IconSet, to outputURL: URL) throws {
+    static func write(_ iconset: Iconset, to outputURL: URL) throws {
         let tempURL = try FileManager.default.url(
             for: .itemReplacementDirectory,
             in: .userDomainMask,
@@ -16,7 +16,7 @@ enum IconUtil {
             create: true
         )
 
-        let iconSetURL = tempURL.appendingPathComponent("icon.iconset")
+        let iconsetURL = tempURL.appendingPathComponent("icon.iconset")
         let iconURL = tempURL.appendingPathComponent("icon.icns")
 
         // ** Workaround for not being able to throw out of a defer block: **
@@ -25,14 +25,14 @@ enum IconUtil {
         // remove the temp url and access the result to either rethrow the caught error or
         // return successfully.
         let result = Result {
-            try iconSet.write(to: iconSetURL)
+            try iconset.write(to: iconsetURL)
             
             let process = Process()
             let pipe = Pipe()
             
             process.standardOutput = pipe
             process.standardError = pipe
-            process.arguments = ["iconutil", "-c", "icns", iconSetURL.lastPathComponent]
+            process.arguments = ["iconutil", "-c", "icns", iconsetURL.lastPathComponent]
             
             let envPath = "/usr/bin/env"
             

@@ -110,7 +110,7 @@ extension FileType {
         return Self(kUTTypeAppleICNS as String)
     }()
 
-    static let iconSet = Self("com.apple.iconset")
+    static let iconset = Self("com.apple.iconset")
 
     static let ico: Self = {
         if #available(macOS 11.0, *) {

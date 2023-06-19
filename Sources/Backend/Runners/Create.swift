@@ -21,35 +21,35 @@ struct Create: Runner {
     let successMessage: String
 
     /// An object that writes an iconset to the runner's output.
-    let writer: IconSetWriter
+    let writer: IconsetWriter
 
     /// Creates a runner with the given input path, output path, and output type.
     init(input: String, output: String?, type: OutputType) {
         let fileType: FileType
         let actionMessage: String
         let successMessage: String
-        let writer: IconSetWriter
+        let writer: IconsetWriter
 
-        let isIconSet: Bool = {
+        let isIconset: Bool = {
             switch type {
             case .icns:
                 return false
-            case .iconSet:
+            case .iconset:
                 return true
             case .infer:
                 if
                     let output,
                     let outputFileType = FileInfo(path: output).fileType
                 {
-                    return outputFileType == .iconSet
+                    return outputFileType == .iconset
                 }
                 // FIXME: Somehow handle this instead of assuming false.
                 return false
             }
         }()
 
-        if isIconSet {
-            fileType = .iconSet
+        if isIconset {
+            fileType = .iconset
             actionMessage = "Creating iconset..."
             successMessage = "Iconset successfully created."
             writer = .direct
@@ -67,7 +67,7 @@ struct Create: Runner {
             }
             let info = FileInfo(path: output)
             if
-                !isIconSet,
+                !isIconset,
                 info.isDirectory
             {
                 return info
@@ -102,8 +102,8 @@ struct Create: Runner {
     func run() throws {
         print(actionMessage)
         let image = try Image(url: inputInfo.url)
-        let iconSet = IconSet(image: image)
-        try writer.write(iconSet, to: outputInfo.url)
+        let iconset = Iconset(image: image)
+        try writer.write(iconset, to: outputInfo.url)
         print(successMessage.formatted(color: .green))
     }
 }

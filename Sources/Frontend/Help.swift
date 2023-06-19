@@ -27,7 +27,7 @@ extension ArgumentHelp {
             """
     )
 
-    static let isIconSet: Self = """
+    static let isIconset: Self = """
         Convert the input into an iconset file instead of inferring the type from \
         the output path extension.
         """
@@ -39,7 +39,7 @@ extension ArgumentHelp {
 
 extension NameSpecification {
     static let type: Self = .customLong("type")
-    static let isIconSet: Self = [.customShort("s"), .customLong("iconset")]
+    static let isIconset: Self = [.customShort("s"), .customLong("iconset")]
     static let listFormats: Self = .customLong("formats")
 }
 

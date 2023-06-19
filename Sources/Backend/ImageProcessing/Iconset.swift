@@ -1,12 +1,12 @@
 //
-// IconSet.swift
+// Iconset.swift
 // createicns
 //
 
 import Foundation
 
 /// Represents an iconset file.
-struct IconSet {
+struct Iconset {
     /// The individual icons contained within the iconset.
     let icons: [Icon]
 
@@ -26,7 +26,7 @@ struct IconSet {
     }
 }
 
-extension IconSet {
+extension Iconset {
     /// Sizing and scaling information used to create the various icons in an iconset.
     struct Dimension: CustomStringConvertible {
         /// The length of each side of the icon.
@@ -67,7 +67,7 @@ extension IconSet {
     }
 }
 
-extension IconSet {
+extension Iconset {
     /// An individual icon in an iconset.
     struct Icon {
         /// The image used to create the icon.
