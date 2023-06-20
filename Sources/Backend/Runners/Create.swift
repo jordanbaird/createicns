@@ -30,23 +30,23 @@ struct Create: Runner {
         let successMessage: String
         let writer: IconsetWriter
 
-        let isIconset: Bool
-        switch type {
-        case .icns:
-            isIconset = false
-        case .iconset:
-            isIconset = true
-        case .infer:
-            if
-                let output,
-                let fileType = FileInfo(path: output).fileType
-            {
-                isIconset = fileType == .iconset
-            } else {
+        let isIconset: Bool = {
+            switch type {
+            case .icns:
+                return false
+            case .iconset:
+                return true
+            case .infer:
+                if
+                    let output,
+                    let fileType = FileInfo(path: output).fileType
+                {
+                    return fileType == .iconset
+                }
                 // FIXME: Somehow handle this instead of assuming false.
-                isIconset = false
+                return false
             }
-        }
+        }()
 
         if isIconset {
             fileType = .iconset
