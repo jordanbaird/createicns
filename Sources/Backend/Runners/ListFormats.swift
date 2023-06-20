@@ -38,11 +38,13 @@ struct ListFormats: Runner {
 
         let headerLines: [String] = {
             // Divide the header and body with a dashed line.
-            let dash = "-", divider = paddedColumns
-                .map { column in
+            let divider: String = {
+                let dash = "-"
+                return paddedColumns.map { column in
                     String(repeating: dash, count: column.length)
                 }
                 .joined(separator: dash)
+            }()
             return [header, divider]
         }()
 

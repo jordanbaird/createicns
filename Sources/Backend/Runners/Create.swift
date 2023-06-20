@@ -43,7 +43,7 @@ struct Create: Runner {
                 {
                     return fileType == .iconset
                 }
-                // FIXME: Somehow handle this instead of assuming false.
+                // TODO: Handle this instead of assuming false.
                 return false
             }
         }()

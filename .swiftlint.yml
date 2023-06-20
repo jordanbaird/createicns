@@ -32,7 +32,6 @@ opt_in_rules:
   - multiline_parameters_brackets
   - operator_usage_whitespace
   - period_spacing
-  - prefer_self_in_static_references
   - unavailable_function
   - vertical_parameter_alignment_on_call
   - vertical_whitespace_closing_braces
