@@ -26,16 +26,16 @@ enum IconUtil {
         // return successfully.
         let result = Result {
             try iconset.write(to: iconsetURL)
-            
+
             let process = Process()
             let pipe = Pipe()
-            
+
             process.standardOutput = pipe
             process.standardError = pipe
             process.arguments = ["iconutil", "-c", "icns", iconsetURL.lastPathComponent]
-            
+
             let envPath = "/usr/bin/env"
-            
+
             if #available(macOS 10.13, *) {
                 process.executableURL = URL(fileURLWithPath: envPath)
                 process.currentDirectoryURL = tempURL
@@ -46,7 +46,7 @@ enum IconUtil {
                 process.launch()
             }
             process.waitUntilExit()
-            
+
             let data: Data? = {
                 let fileHandle = pipe.fileHandleForReading
                 if #available(macOS 10.15.4, *) {
@@ -56,7 +56,7 @@ enum IconUtil {
                     return data.isEmpty ? nil : data
                 }
             }()
-            
+
             // iconutil only returns data if something went wrong.
             if let data {
                 throw ContextualDataError(data, context: self)

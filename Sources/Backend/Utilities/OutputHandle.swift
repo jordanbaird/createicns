@@ -51,10 +51,12 @@ public struct OutputHandle {
 
     // MARK: Standard Handles
 
+    // swiftlint:disable prefer_self_in_static_references
     /// The standard output handle.
     public static let standardOutput = OutputHandle(kind: .fileDescriptor(STDOUT_FILENO))
     /// The standard error handle.
     public static let standardError  = OutputHandle(kind: .fileDescriptor(STDERR_FILENO))
+    // swiftlint:enable prefer_self_in_static_references
 
     // MARK: Instance Methods
 
@@ -109,6 +111,8 @@ extension OutputHandle: Hashable {
 extension OutputHandle: TextOutputStream {
     private func write<S: Sequence>(_ elements: S, to fileHandle: FileHandle) where S.Element == UInt8 {
         if #available(macOS 10.15.4, *) {
+            // We want to know if there's a failure here, so a force try is acceptable.
+            // swiftlint:disable:next force_try
             try! fileHandle.write(contentsOf: Data(elements))
         } else {
             fileHandle.write(Data(elements))
