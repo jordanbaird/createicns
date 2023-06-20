@@ -23,6 +23,9 @@ private func getScaleFactor(forSize size: CGSize, minDimension: CGFloat, maxDime
 
 /// A type that contains writable image data.
 struct Image {
+
+    // MARK: Types
+
     /// Default values used to create a graphics context.
     private enum ContextDefaults {
         static let bitsPerComponent: Int = 8
@@ -64,11 +67,6 @@ struct Image {
         }
     }
 
-    /// A context for caching a Core Graphics image.
-    private class Context {
-        var cgImage: CGImage?
-    }
-
     // MARK: Static Properties
 
     /// The valid file types for an image.
@@ -87,21 +85,20 @@ struct Image {
 
     // MARK: Instance Properties
 
-    private let context = Context()
-
-    private let _makeCGImage: () throws -> CGImage
+    private let makeCGImage: () throws -> CGImage
 
     // MARK: Initializers
 
     private init(makeCGImage: @escaping () throws -> CGImage) {
-        self._makeCGImage = makeCGImage
+        self.makeCGImage = makeCGImage
     }
 
     /// Creates an image by reading data from the given url.
     init(url: URL) throws {
-        let type = FileType(url: url) ?? .image
-
-        if !Self.validTypes.contains(type) {
+        guard
+            let type = FileType(url: url),
+            Self.validTypes.contains(type)
+        else {
             throw ImageCreationError.invalidImageFormat
         }
 
@@ -178,23 +175,6 @@ struct Image {
         URLDestination(url: url, image: self, type: type)
     }
 
-    /// Returns a Core Graphics image from this image.
-    private func makeCGImage() throws -> CGImage {
-        let cgImage: CGImage = try {
-            if let cgImage = context.cgImage {
-                return cgImage
-            } else {
-                let cgImage = try _makeCGImage()
-                context.cgImage = cgImage
-                return cgImage
-            }
-        }()
-        guard cgImage.width == cgImage.height else {
-            throw ImageCreationError.invalidDimensions
-        }
-        return cgImage
-    }
-
     /// Returns an image that is resized to the given size when it is drawn.
     func resized(to size: CGSize) -> Self {
         Self(makeCGImage: {
@@ -217,14 +197,16 @@ struct Image {
     }
 }
 
-// MARK: Image.Destination
+// MARK: Image.URLDestination
 extension Image {
     /// An image destination that writes an image to a url.
     struct URLDestination {
         /// The url to write the image to.
         let url: URL
+
         /// The image to write.
         let image: Image
+
         /// An identifier specifying the type of image data to write.
         let type: FileType
 
@@ -240,10 +222,16 @@ extension Image {
         func write() throws {
             let url = try FileVerifier(options: [!.fileExists]).verify(info: FileInfo(url: url)).url as CFURL
             let type = type.identifier as CFString
+
             guard let destination = CGImageDestinationCreateWithURL(url, type, 1, nil) else {
                 throw Image.ImageCreationError.invalidDestination
             }
+
             let cgImage = try image.makeCGImage()
+            guard cgImage.width == cgImage.height else {
+                throw ImageCreationError.invalidDimensions
+            }
+
             CGImageDestinationAddImage(destination, cgImage, nil)
             if !CGImageDestinationFinalize(destination) {
                 throw Image.ImageCreationError.invalidDestination
