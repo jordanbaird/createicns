@@ -57,7 +57,6 @@ struct Image {
         case pdfDocumentError = "Error with PDF document."
         case svgCreationError = "Error creating image data from SVG."
         case invalidImageFormat = "File is not a valid image format."
-        case invalidDimensions = "Image width and height must be equal."
         case invalidData = "Invalid image data."
         case invalidSource = "Invalid image source."
         case invalidDestination = "Invalid image destination."
@@ -85,12 +84,20 @@ struct Image {
 
     // MARK: Instance Properties
 
-    private let makeCGImage: () throws -> CGImage
+    private let cgImage: CGImage
+
+    var width: CGFloat {
+        CGFloat(cgImage.width)
+    }
+
+    var height: CGFloat {
+        CGFloat(cgImage.height)
+    }
 
     // MARK: Initializers
 
-    private init(makeCGImage: @escaping () throws -> CGImage) {
-        self.makeCGImage = makeCGImage
+    private init(cgImage: CGImage) {
+        self.cgImage = cgImage
     }
 
     /// Creates an image by reading data from the given url.
@@ -104,67 +111,61 @@ struct Image {
 
         switch type {
         case .pdf:
-            self.init(makeCGImage: {
-                guard
-                    let document = CGPDFDocument(url as CFURL),
-                    let page = document.page(at: 1)
-                else {
-                    throw ImageCreationError.pdfDocumentError
-                }
-                let mediaBox = page.getBoxRect(.mediaBox)
-                // 1024x1024 is the size of the largest image we need to produce.
-                // Scale down if more than 4 times larger.
-                let scaleFactor = getScaleFactor(forSize: mediaBox.size, minDimension: 0, maxDimension: 1024 * 4)
-                let destRect = mediaBox.applying(CGAffineTransform(scaleX: scaleFactor, y: scaleFactor))
-                let context = try ContextDefaults.makeContext(size: destRect.size)
-                context.scaleBy(x: scaleFactor, y: scaleFactor)
-                context.clear(destRect)
-                context.drawPDFPage(page)
-                guard let image = context.makeImage() else {
-                    throw ImageCreationError.graphicsContextError
-                }
-                return image
-            })
+            guard
+                let document = CGPDFDocument(url as CFURL),
+                let page = document.page(at: 1)
+            else {
+                throw ImageCreationError.pdfDocumentError
+            }
+            let mediaBox = page.getBoxRect(.mediaBox)
+            // 1024x1024 is the size of the largest image we need to produce.
+            // Scale down if more than 4 times larger.
+            let scaleFactor = getScaleFactor(forSize: mediaBox.size, minDimension: 0, maxDimension: 1024 * 4)
+            let destRect = mediaBox.applying(CGAffineTransform(scaleX: scaleFactor, y: scaleFactor))
+            let context = try ContextDefaults.makeContext(size: destRect.size)
+            context.scaleBy(x: scaleFactor, y: scaleFactor)
+            context.clear(destRect)
+            context.drawPDFPage(page)
+            guard let cgImage = context.makeImage() else {
+                throw ImageCreationError.graphicsContextError
+            }
+            self.init(cgImage: cgImage)
         case .svg:
-            self.init(makeCGImage: {
-                let svg = try OutputHandle.standardError.redirect {
-                    guard let svg = SVG(fileURL: url) else {
-                        throw ImageCreationError.svgCreationError
-                    }
-                    return svg
+            let svg = try OutputHandle.standardError.redirect {
+                guard let svg = SVG(fileURL: url) else {
+                    throw ImageCreationError.svgCreationError
                 }
-                // 1024x1024 is the size of the largest image we need to produce.
-                // Scale up if smaller. Scale down if more than 4 times larger.
-                let scaleFactor = getScaleFactor(forSize: svg.size, minDimension: 1024, maxDimension: 1024 * 4)
-                let data = try svg.pngData(size: svg.size, scale: scaleFactor)
-                let options: [CFString: CFTypeRef] = [
-                    kCGImageSourceTypeIdentifierHint: FileType.png.identifier as CFString,
-                    kCGImageSourceShouldCache: kCFBooleanTrue,
-                    kCGImageSourceShouldAllowFloat: kCFBooleanTrue,
-                ]
-                guard
-                    let source = CGImageSourceCreateWithData(data as CFData, options as CFDictionary),
-                    let cgImage = CGImageSourceCreateImageAtIndex(source, 0, options as CFDictionary)
-                else {
-                    throw ImageCreationError.invalidSource
-                }
-                return cgImage
-            })
+                return svg
+            }
+            // 1024x1024 is the size of the largest image we need to produce.
+            // Scale up if smaller. Scale down if more than 4 times larger.
+            let scaleFactor = getScaleFactor(forSize: svg.size, minDimension: 1024, maxDimension: 1024 * 4)
+            let data = try svg.pngData(size: svg.size, scale: scaleFactor)
+            let options: [CFString: CFTypeRef] = [
+                kCGImageSourceTypeIdentifierHint: FileType.png.identifier as CFString,
+                kCGImageSourceShouldCache: kCFBooleanTrue,
+                kCGImageSourceShouldAllowFloat: kCFBooleanTrue,
+            ]
+            guard
+                let source = CGImageSourceCreateWithData(data as CFData, options as CFDictionary),
+                let cgImage = CGImageSourceCreateImageAtIndex(source, 0, options as CFDictionary)
+            else {
+                throw ImageCreationError.invalidSource
+            }
+            self.init(cgImage: cgImage)
         default:
-            self.init(makeCGImage: {
-                let options: [CFString: CFTypeRef] = [
-                    kCGImageSourceTypeIdentifierHint: type.identifier as CFString,
-                    kCGImageSourceShouldCache: kCFBooleanTrue,
-                    kCGImageSourceShouldAllowFloat: kCFBooleanTrue,
-                ]
-                guard
-                    let source = CGImageSourceCreateWithURL(url as CFURL, options as CFDictionary),
-                    let cgImage = CGImageSourceCreateImageAtIndex(source, 0, options as CFDictionary)
-                else {
-                    throw ImageCreationError.invalidSource
-                }
-                return cgImage
-            })
+            let options: [CFString: CFTypeRef] = [
+                kCGImageSourceTypeIdentifierHint: type.identifier as CFString,
+                kCGImageSourceShouldCache: kCFBooleanTrue,
+                kCGImageSourceShouldAllowFloat: kCFBooleanTrue,
+            ]
+            guard
+                let source = CGImageSourceCreateWithURL(url as CFURL, options as CFDictionary),
+                let cgImage = CGImageSourceCreateImageAtIndex(source, 0, options as CFDictionary)
+            else {
+                throw ImageCreationError.invalidSource
+            }
+            self.init(cgImage: cgImage)
         }
     }
 
@@ -176,24 +177,21 @@ struct Image {
     }
 
     /// Returns an image that is resized to the given size when it is drawn.
-    func resized(to size: CGSize) -> Self {
-        Self(makeCGImage: {
-            let context = try ContextDefaults.makeContext(size: size)
-            let oldImage = try makeCGImage()
+    func resized(to size: CGSize) throws -> Self {
+        let context = try ContextDefaults.makeContext(size: size)
 
-            // Create a new size from the values in the context to be sure we don't
-            // cut off the edges of the new image.
-            let sizeIntegral = CGSize(width: context.width, height: context.height)
+        // Create a new size from the values in the context to be sure we don't
+        // cut off the edges of the new image.
+        let sizeIntegral = CGSize(width: context.width, height: context.height)
 
-            let rect = CGRect(origin: .zero, size: sizeIntegral)
-            context.draw(oldImage, in: rect)
+        let rect = CGRect(origin: .zero, size: sizeIntegral)
+        context.draw(cgImage, in: rect)
 
-            guard let cgImage = context.makeImage() else {
-                throw ImageCreationError.graphicsContextError
-            }
+        guard let cgImage = context.makeImage() else {
+            throw ImageCreationError.graphicsContextError
+        }
 
-            return cgImage
-        })
+        return Self(cgImage: cgImage)
     }
 }
 
@@ -218,21 +216,19 @@ extension Image {
             self.type = type
         }
 
-        /// Writes the data to the destination's url.
+        /// Writes the image's data to the destination's url.
         func write() throws {
-            let url = try FileVerifier(options: [!.fileExists]).verify(info: FileInfo(url: url)).url as CFURL
+            let url = try FileVerifier(options: [.fileExists.inverted])
+                .verify(info: FileInfo(url: url))
+                .url as CFURL
+            let image = image.cgImage
             let type = type.identifier as CFString
 
             guard let destination = CGImageDestinationCreateWithURL(url, type, 1, nil) else {
                 throw Image.ImageCreationError.invalidDestination
             }
 
-            let cgImage = try image.makeCGImage()
-            guard cgImage.width == cgImage.height else {
-                throw ImageCreationError.invalidDimensions
-            }
-
-            CGImageDestinationAddImage(destination, cgImage, nil)
+            CGImageDestinationAddImage(destination, image, nil)
             if !CGImageDestinationFinalize(destination) {
                 throw Image.ImageCreationError.invalidDestination
             }

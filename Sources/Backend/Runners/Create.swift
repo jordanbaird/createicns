@@ -103,6 +103,7 @@ struct Create: Runner {
         print(actionMessage)
         let image = try Image(url: inputInfo.url)
         let iconset = Iconset(image: image)
+        try iconset.validateDimensions()
         try writer.write(iconset, to: outputInfo.url)
         print(successMessage.formatted(color: .green))
     }

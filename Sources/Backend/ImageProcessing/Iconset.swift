@@ -17,6 +17,14 @@ struct Iconset {
         }
     }
 
+    /// Validates the dimensions of every icon in the iconset, ensuring that the widths
+    /// and heights are equal.
+    func validateDimensions() throws {
+        for icon in icons {
+            try icon.validateDimensions()
+        }
+    }
+
     /// Writes the contents of the iconset to the given output url, creating it if necessary.
     func write(to outputURL: URL) throws {
         try FileManager.default.createDirectory(at: outputURL, withIntermediateDirectories: true)
@@ -70,6 +78,14 @@ extension Iconset {
 extension Iconset {
     /// An individual icon in an iconset.
     struct Icon {
+        private enum IconValidationError: String, FormattedError {
+            case invalidDimensions = "Image width and height must be equal."
+
+            var message: FormattedText {
+                "\("Invalid icon", color: .red) — \(rawValue, style: .bold)"
+            }
+        }
+
         /// The image used to create the icon.
         let image: Image
 
@@ -82,6 +98,13 @@ extension Iconset {
             self.dimension = dimension
         }
 
+        /// Validates the dimensions of the icon, ensuring that the width and height are equal.
+        func validateDimensions() throws {
+            guard image.width == image.height else {
+                throw IconValidationError.invalidDimensions
+            }
+        }
+
         /// Returns the appropriate output url for the icon, in relation to the given directory.
         ///
         /// The icon's `dimension` is used to construct the icon's filename.
@@ -90,8 +113,8 @@ extension Iconset {
         }
 
         /// Returns an image destination for writing the icon's data into the given directory.
-        func urlDestination(for directory: URL) -> Image.URLDestination {
-            image
+        func urlDestination(for directory: URL) throws -> Image.URLDestination {
+            try image
                 .resized(to: dimension.size)
                 .urlDestination(forURL: outputURL(for: directory), type: .png)
         }

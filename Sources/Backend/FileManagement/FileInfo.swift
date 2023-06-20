@@ -58,7 +58,7 @@ struct FileInfo {
     /// The standardized path associated with this file information.
     var path: String {
         if let components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
-            return components.percentEncodedPath
+            return components.path
         }
         return url.path
     }
