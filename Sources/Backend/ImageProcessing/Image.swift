@@ -131,6 +131,9 @@ struct Image {
             }
             self.init(cgImage: cgImage)
         case .svg:
+            // HACK: SwiftDraw logs some implementation details to stderr when it finds
+            // something in an SVG file it doesn't like. Temporarily redirect stderr to
+            // an empty file and throw our own error on failure.
             let svg = try OutputHandle.standardError.redirect {
                 guard let svg = SVG(fileURL: url) else {
                     throw ImageCreationError.svgCreationError
