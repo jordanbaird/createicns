@@ -21,6 +21,6 @@ struct Version {
 
     /// The current version of the `createicns` tool.
     static var current: Self {
-        Self(major: 0, minor: 0, patch: 4)
+        Self(major: 0, minor: 1, patch: 0)
     }
 }
