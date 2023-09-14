@@ -10,16 +10,48 @@ import Foundation
 /// An error type that is displayed in a formatted representation when printed
 /// to a command line interface.
 public protocol FormattedError: Error, TextOutputStreamable {
-    /// The formatted message to display.
+    /// The formatted error message to display.
     ///
-    /// If one of either standard output or standard error does not point to a
-    /// terminal, the message is displayed without formatting.
-    var message: FormattedText { get }
+    /// If one of either standard output or standard error does not point to 
+    /// a terminal, the message is displayed without formatting.
+    var errorMessage: FormattedText { get }
+
+    /// An optional formatted message to display that describes how the user
+    /// can remedy this error.
+    ///
+    /// If one of either standard output or standard error does not point to
+    /// a terminal, the message is displayed without formatting.
+    var fix: FormattedText? { get }
+}
+
+extension FormattedError {
+    public var fix: FormattedText? { nil }
 }
 
 extension FormattedError {
     public func write<Target: TextOutputStream>(to target: inout Target) {
-        message.write(to: &target)
+        errorMessage.write(to: &target)
+    }
+}
+
+// MARK: FormattedErrorBox
+
+/// A formatted error type that wraps another error.
+struct FormattedErrorBox: FormattedError {
+    let error: any Error
+
+    var errorMessage: FormattedText {
+        if let error = error as? FormattedError {
+            return error.errorMessage
+        }
+        return FormattedText(contentsOf: error.localizedDescription)
+    }
+
+    var fix: FormattedText? {
+        if let error = error as? FormattedError {
+            return error.fix
+        }
+        return nil
     }
 }
 
@@ -34,7 +66,7 @@ struct ContextualDataError: FormattedError {
     /// A string describing the context in which this error occurred.
     let context: String
 
-    var message: FormattedText {
+    var errorMessage: FormattedText {
         var message = FormattedText(context + ":", color: .yellow, style: .bold)
         if let string = String(data: data, encoding: .utf8) {
             message.append(" \("An error occurred with the following data:", color: .red) \(string)")

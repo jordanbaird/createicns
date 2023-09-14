@@ -81,7 +81,7 @@ extension Iconset {
         private enum IconValidationError: String, FormattedError {
             case invalidDimensions = "Image width and height must be equal."
 
-            var message: FormattedText {
+            var errorMessage: FormattedText {
                 "\("Invalid icon", color: .red) — \(rawValue, style: .bold)"
             }
         }

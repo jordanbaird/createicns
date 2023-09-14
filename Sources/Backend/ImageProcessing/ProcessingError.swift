@@ -14,7 +14,7 @@ enum ImageProcessingError: String, FormattedError {
     case pdfDocumentError = "Error with PDF document."
     case svgCreationError = "Error creating image data from SVG."
 
-    var message: FormattedText {
+    var errorMessage: FormattedText {
         "\("Could not process image", color: .red) — \(rawValue, style: .bold)"
     }
 }

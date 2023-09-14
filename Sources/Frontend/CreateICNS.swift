@@ -19,8 +19,8 @@ struct CreateICNS: ParsableCommand {
 
     @OptionGroup var options: Options
 
-    func run() throws {
-        try MainRunner(
+    func run() {
+        MainRunner(
             input: options.input,
             output: options.output,
             type: options.type,

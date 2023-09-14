@@ -68,7 +68,7 @@ struct FileVerifier {
         case isNotDirectory(String)
         case invalidPathExtension(String, FileType?)
 
-        var message: FormattedText {
+        var errorMessage: FormattedText {
             switch self {
             case .alreadyExists(let path):
                 return "'\(path, color: .yellow)' already exists"
@@ -88,6 +88,15 @@ struct FileVerifier {
                 }
                 return start + " for unknown output type"
             }
+        }
+
+        var fix: FormattedText? {
+            if case .invalidPathExtension(_, let outputType) = self {
+                if let type = outputType?.preferredFilenameExtension {
+                    return "Use path extension '\(type, color: .green, style: .bold)'"
+                }
+            }
+            return nil
         }
     }
 
