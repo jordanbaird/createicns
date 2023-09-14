@@ -134,9 +134,4 @@ struct FileVerifier {
         }
         return info
     }
-
-    /// Creates a verifier that verifies files using the given options.
-    init(options: [Option]) {
-        self.options = options
-    }
 }
