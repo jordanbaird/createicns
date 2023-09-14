@@ -63,8 +63,8 @@ struct Image {
                 throw ImageProcessingError.pdfDocumentError
             }
             let mediaBox = page.getBoxRect(.mediaBox)
-            // 1024x1024 is the size of the largest image we need to produce.
-            // Scale down if more than 4 times larger.
+            // 1024x1024 is the size of the largest image we need to produce;
+            // scale down if more than 4 times larger
             let scaleFactor = Self.getScaleFactor(forSize: mediaBox.size, minDimension: 0, maxDimension: 1024 * 4)
             let destRect = mediaBox.applying(CGAffineTransform(scaleX: scaleFactor, y: scaleFactor))
             let context = try Self.makeGraphicsContext(size: destRect.size)
@@ -77,16 +77,16 @@ struct Image {
             self.init(cgImage: cgImage)
         case .svg:
             // HACK: SwiftDraw logs some implementation details to stderr when it finds
-            // something in an SVG file it doesn't like. Temporarily redirect stderr to
-            // an empty file and throw our own error on failure.
+            // something in an SVG file it doesn't like; temporarily redirect stderr to
+            // an empty file and throw our own error on failure
             let svg = try OutputHandle.standardError.redirect {
                 guard let svg = SVG(fileURL: url) else {
                     throw ImageProcessingError.svgCreationError
                 }
                 return svg
             }
-            // 1024x1024 is the size of the largest image we need to produce.
-            // Scale up if smaller. Scale down if more than 4 times larger.
+            // 1024x1024 is the size of the largest image we need to produce;
+            // scale up if smaller; scale down if more than 4 times larger
             let scaleFactor = Self.getScaleFactor(forSize: svg.size, minDimension: 1024, maxDimension: 1024 * 4)
             let data = try svg.pngData(size: svg.size, scale: scaleFactor)
             let options = Self.getImageSourceOptions(type: .png)
@@ -172,8 +172,8 @@ struct Image {
     func resized(to size: CGSize) throws -> Self {
         let context = try Self.makeGraphicsContext(size: size)
 
-        // Create a new size from the values in the context to be sure we don't
-        // cut off the edges of the new image.
+        // create a new size from the values in the context to be sure we don't
+        // cut off the edges of the new image
         let sizeIntegral = CGSize(width: context.width, height: context.height)
 
         let rect = CGRect(origin: .zero, size: sizeIntegral)

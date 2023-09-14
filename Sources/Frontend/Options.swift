@@ -29,7 +29,7 @@ struct Options: ParsableArguments {
 
     mutating func validate() throws {
         if isIconset {
-            type = .iconset // Set the type to simulate the behavior of --iconset
+            type = .iconset // set the type to simulate the behavior of "--iconset"
             print(
                 FormattedText("warning:", color: .yellow, style: .bold)
                     .appending(" '")

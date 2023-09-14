@@ -76,13 +76,13 @@ public struct OutputHandle {
 
         let handle = handle ?? Self()
 
-        // Create a temporary file descriptor to maintain a reference to the original
-        // file, then point this handle's descriptor at the replacement handle's file.
+        // create a temporary file descriptor to maintain a reference to the original
+        // file, then point this handle's descriptor at the replacement handle's file
         let tempfd = dup(fileDescriptor)
         dup2(handle.fileDescriptor, fileDescriptor)
 
         defer {
-            // Point this handle back to the original file and close the temp.
+            // point this handle back to the original file and close the temp
             dup2(tempfd, fileDescriptor)
             close(tempfd)
         }
@@ -109,7 +109,7 @@ extension OutputHandle: Hashable {
 extension OutputHandle: TextOutputStream {
     private func write<S: Sequence>(_ elements: S, to fileHandle: FileHandle) where S.Element == UInt8 {
         if #available(macOS 10.15.4, *) {
-            // We want to be alerted of a failure here, so a force try is acceptable.
+            // we want to know about a failure here, so a force try is acceptable
             // swiftlint:disable:next force_try
             try! fileHandle.write(contentsOf: Data(elements))
         } else {
