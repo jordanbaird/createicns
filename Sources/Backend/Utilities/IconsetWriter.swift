@@ -1,6 +1,6 @@
 //
-// IconsetWriter.swift
-// createicns
+//  IconsetWriter.swift
+//  createicns
 //
 
 import Foundation

@@ -1,6 +1,6 @@
 //
-// IconUtil.swift
-// createicns
+//  IconUtil.swift
+//  createicns
 //
 
 import Foundation

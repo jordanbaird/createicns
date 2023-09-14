@@ -1,6 +1,6 @@
 //
-// OutputType.swift
-// createicns
+//  OutputType.swift
+//  createicns
 //
 
 public enum OutputType: String, CaseIterable {

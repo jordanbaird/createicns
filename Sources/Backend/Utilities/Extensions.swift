@@ -1,6 +1,6 @@
 //
-// Extensions.swift
-// createicns
+//  Extensions.swift
+//  createicns
 //
 
 // MARK: - CustomStringConvertible

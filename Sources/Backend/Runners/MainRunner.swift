@@ -1,6 +1,6 @@
 //
-// MainRunner.swift
-// createicns
+//  MainRunner.swift
+//  createicns
 //
 
 /// The main runner that encapsulates the behavior of the command, delegating

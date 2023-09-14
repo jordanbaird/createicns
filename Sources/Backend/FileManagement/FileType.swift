@@ -1,6 +1,6 @@
 //
-// FileType.swift
-// createicns
+//  FileType.swift
+//  createicns
 //
 
 import Foundation

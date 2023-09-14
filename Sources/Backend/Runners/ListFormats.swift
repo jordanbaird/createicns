@@ -1,6 +1,6 @@
 //
-// ListFormats.swift
-// createicns
+//  ListFormats.swift
+//  createicns
 //
 
 /// A runner that lists the tool's valid input formats.

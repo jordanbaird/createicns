@@ -1,6 +1,6 @@
 //
-// Formatting.swift
-// createicns
+//  Formatting.swift
+//  createicns
 //
 
 private func shouldFormat(formattingHint: FormattedText.FormattingHint) -> Bool {

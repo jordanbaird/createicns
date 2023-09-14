@@ -1,6 +1,6 @@
 //
-// Image.swift
-// createicns
+//  Image.swift
+//  createicns
 //
 
 import CoreGraphics

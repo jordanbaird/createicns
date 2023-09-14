@@ -1,6 +1,6 @@
 //
-// Options.swift
-// createicns
+//  Options.swift
+//  createicns
 //
 
 import ArgumentParser

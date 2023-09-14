@@ -1,6 +1,6 @@
 //
-// Version.swift
-// createicns
+//  Version.swift
+//  createicns
 //
 
 /// A type that represents a semantic versioning number.

@@ -1,6 +1,6 @@
 //
-// RunnerProtocol.swift
-// createicns
+//  RunnerProtocol.swift
+//  createicns
 //
 
 /// A type that encapsulates the behavior of a specific part of the command.

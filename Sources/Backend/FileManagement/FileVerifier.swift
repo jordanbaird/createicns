@@ -1,6 +1,6 @@
 //
-// FileVerifier.swift
-// createicns
+//  FileVerifier.swift
+//  createicns
 //
 
 import Foundation

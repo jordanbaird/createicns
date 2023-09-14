@@ -1,6 +1,6 @@
 //
-// PrintHelpMessage.swift
-// createicns
+//  PrintHelpMessage.swift
+//  createicns
 //
 
 /// A runner that prints the command's help message.

@@ -1,6 +1,6 @@
 //
-// ProcessingError.swift
-// createicns
+//  ProcessingError.swift
+//  createicns
 //
 
 /// An error that can be thrown during image processing.

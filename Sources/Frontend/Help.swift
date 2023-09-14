@@ -1,6 +1,6 @@
 //
-// Help.swift
-// createicns
+//  Help.swift
+//  createicns
 //
 
 import ArgumentParser

@@ -1,6 +1,6 @@
 //
-// Create.swift
-// createicns
+//  Create.swift
+//  createicns
 //
 
 /// A runner that manages the creation and output of icns and iconset files.

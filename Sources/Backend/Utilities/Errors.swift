@@ -1,6 +1,6 @@
 //
-// Errors.swift
-// createicns
+//  Errors.swift
+//  createicns
 //
 
 import Foundation
