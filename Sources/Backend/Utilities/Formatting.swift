@@ -58,15 +58,6 @@ public enum TextOutputColor {
     }
 }
 
-// MARK: TextOutputColor: Codable
-extension TextOutputColor: Codable { }
-
-// MARK: TextOutputColor: Equatable
-extension TextOutputColor: Equatable { }
-
-// MARK: TextOutputColor: Hashable
-extension TextOutputColor: Hashable { }
-
 // MARK: - TextOutputStyle
 
 /// Styles to use to format text when displayed in a terminal.
@@ -95,9 +86,6 @@ public enum TextOutputStyle {
     }
 }
 
-// MARK: TextOutputStyle: Codable
-extension TextOutputStyle: Codable { }
-
 // MARK: TextOutputStyle: Equatable
 extension TextOutputStyle: Equatable { }
 
@@ -112,7 +100,7 @@ extension TextOutputStyle: Hashable { }
 /// unformatted string representation of itself. When an instance of ``FormattedText``
 /// needs to display its components, it uses the value of a provided formatting
 /// hint to decide which representation to use.
-public enum FormattedTextComponent {
+public enum FormattedTextComponent: Hashable {
     /// A component that contains unformatted text.
     case unformatted(String)
 
@@ -165,15 +153,6 @@ public enum FormattedTextComponent {
         }
     }
 }
-
-// MARK: FormattedTextComponent: Codable
-extension FormattedTextComponent: Codable { }
-
-// MARK: FormattedTextComponent: Equatable
-extension FormattedTextComponent: Equatable { }
-
-// MARK: FormattedTextComponent: Hashable
-extension FormattedTextComponent: Hashable { }
 
 // MARK: - FormattedText
 
@@ -505,9 +484,6 @@ extension FormattedText: MutableCollection {
         set { components[position] = newValue }
     }
 }
-
-// MARK: FormattedText: Codable
-extension FormattedText: Codable { }
 
 // MARK: FormattedText: Equatable
 extension FormattedText: Equatable { }

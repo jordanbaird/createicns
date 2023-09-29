@@ -187,7 +187,7 @@ struct Image {
     }
 }
 
-// MARK: Image.URLDestination
+// MARK: - URLDestination
 extension Image {
     /// An image destination that writes an image to a url.
     struct URLDestination {

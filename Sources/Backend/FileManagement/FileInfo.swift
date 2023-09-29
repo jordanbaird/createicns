@@ -28,7 +28,7 @@ private func joinPathComponents<S: Sequence>(_ components: S) -> String where S.
 // MARK: - FileInfo
 
 /// A type that contains information associated with a standardized file path or url.
-struct FileInfo {
+struct FileInfo: Hashable {
 
     // MARK: Types
 
@@ -177,21 +177,3 @@ struct FileInfo {
         deletingPathExtension().appendingPathExtension(for: fileType)
     }
 }
-
-// MARK: FileInfo: Codable
-extension FileInfo: Codable { }
-
-// MARK: FileInfo: Equatable
-extension FileInfo: Equatable { }
-
-// MARK: FileInfo: Hashable
-extension FileInfo: Hashable { }
-
-// MARK: FileInfo.DirectoryHint: Codable
-extension FileInfo.DirectoryHint: Codable { }
-
-// MARK: FileInfo.DirectoryHint: Equatable
-extension FileInfo.DirectoryHint: Equatable { }
-
-// MARK: FileInfo.DirectoryHint: Hashable
-extension FileInfo.DirectoryHint: Hashable { }

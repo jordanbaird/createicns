@@ -3,7 +3,7 @@
 //  createicns
 //
 
-/// A runner that prints the command's help message.
+/// A runner that prints the tool's help message.
 struct PrintHelpMessage: Runner {
     private let helpMessage: () -> String
 

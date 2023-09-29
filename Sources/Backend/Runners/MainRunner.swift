@@ -5,12 +5,12 @@
 
 import Darwin
 
-/// The main runner that encapsulates the behavior of the command, delegating
+/// The main runner that encapsulates the behavior of the tool, delegating
 /// parts of its execution to additional sub-runners.
 public struct MainRunner: Runner {
     private let runners: [Runner]
 
-    /// Creates a runner that encapsulates the behavior of the command, delegating
+    /// Creates a runner that encapsulates the behavior of the tool, delegating
     /// to additional sub-runners depending on the arguments passed in.
     public init(
         input: String?,

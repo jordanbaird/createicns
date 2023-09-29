@@ -20,7 +20,7 @@ struct Version {
     }
 
     /// The current version of the `createicns` tool.
-    static var current: Self {
-        Self(major: 0, minor: 1, patch: 0)
+    static var current: Version {
+        Version(major: 0, minor: 1, patch: 0)
     }
 }

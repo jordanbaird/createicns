@@ -83,7 +83,8 @@ struct FileType {
     }
 }
 
-// MARK: FileType Constants
+// MARK: Constants
+
 extension FileType {
     /// A base type that represents image data.
     static let image: Self = {

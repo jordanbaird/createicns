@@ -3,7 +3,7 @@
 //  createicns
 //
 
-/// A type that encapsulates the behavior of a specific part of the command.
+/// A type that encapsulates the behavior of a specific part of the `createicns` tool.
 protocol Runner {
     /// Performs validation on the runner's data and state.
     func validate() throws
@@ -12,5 +12,5 @@ protocol Runner {
 }
 
 extension Runner {
-    public func validate() { }
+    func validate() { }
 }

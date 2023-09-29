@@ -6,9 +6,6 @@
 import ArgumentParser
 import Backend
 
-// MARK: OutputType: ExpressibleByArgument
-extension OutputType: ExpressibleByArgument { }
-
 // MARK: - Options
 
 struct Options: ParsableArguments {
@@ -43,3 +40,6 @@ struct Options: ParsableArguments {
         }
     }
 }
+
+// MARK: OutputType: ExpressibleByArgument
+extension OutputType: ExpressibleByArgument { }
