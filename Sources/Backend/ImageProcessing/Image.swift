@@ -210,9 +210,13 @@ extension Image {
 
         /// Writes the image's data to the destination's url.
         func write() throws {
-            let url = try FileVerifier(options: [.fileExists.inverted])
-                .verify(info: FileInfo(url: url))
-                .url as CFURL
+            let info = FileInfo(url: url)
+
+            guard !info.fileExists else {
+                throw FileVerificationError.alreadyExists(info.path)
+            }
+
+            let url = info.url as CFURL
             let image = image.cgImage
             let type = type.identifier as CFString
 

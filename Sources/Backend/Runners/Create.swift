@@ -86,17 +86,21 @@ struct Create: Runner {
     }
 
     func validate() throws {
-        let inputVerifier = FileVerifier(options: [
-            .fileExists,
-            .isDirectory.inverted,
-        ])
-        let outputVerifier = FileVerifier(options: [
-            .fileExists.inverted,
-            .isDirectory.inverted,
-            .isFileType(fileType),
-        ])
-        try inputVerifier.verify(info: inputInfo)
-        try outputVerifier.verify(info: outputInfo)
+        if !inputInfo.fileExists {
+            throw FileVerificationError.doesNotExist(inputInfo.path)
+        }
+        if inputInfo.isDirectory {
+            throw FileVerificationError.isDirectory(inputInfo.path)
+        }
+        if outputInfo.fileExists {
+            throw FileVerificationError.alreadyExists(outputInfo.path)
+        }
+        if outputInfo.isDirectory {
+            throw FileVerificationError.isDirectory(outputInfo.path)
+        }
+        if FileType(url: outputInfo.url) != fileType {
+            throw FileVerificationError.invalidPathExtension(outputInfo.pathExtension, fileType)
+        }
     }
 
     func run() throws {

@@ -5,7 +5,7 @@
 
 import Foundation
 
-// MARK: FormattedError
+// MARK: - FormattedError
 
 /// An error type that is displayed in a formatted representation when printed
 /// to a command line interface.
@@ -34,7 +34,7 @@ extension FormattedError {
     }
 }
 
-// MARK: FormattedErrorBox
+// MARK: - FormattedErrorBox
 
 /// A formatted error type that wraps another error.
 struct FormattedErrorBox: FormattedError {
@@ -55,7 +55,7 @@ struct FormattedErrorBox: FormattedError {
     }
 }
 
-// MARK: ContextualDataError
+// MARK: - ContextualDataError
 
 /// An error that contains its information in the form of a data object, along
 /// with the context in which the error occurred.
@@ -85,5 +85,47 @@ struct ContextualDataError: FormattedError {
     /// Creates an error with the given data and context.
     init<Context>(_ data: Data, context: Context.Type) {
         self.init(data, context: String(describing: context))
+    }
+}
+
+// MARK: - FileVerificationError
+
+/// An error that can be thrown during file verification.
+enum FileVerificationError: FormattedError {
+    case alreadyExists(String)
+    case doesNotExist(String)
+    case isDirectory(String)
+    case isNotDirectory(String)
+    case invalidPathExtension(String, FileType?)
+
+    var errorMessage: FormattedText {
+        switch self {
+        case .alreadyExists(let path):
+            return "'\(path, color: .yellow)' already exists"
+        case .doesNotExist(let path):
+            return "No such file or directory '\(path, color: .yellow)'"
+        case .isDirectory(let path):
+            return "'\(path, color: .yellow)' is a directory"
+        case .isNotDirectory(let path):
+            return "'\(path, color: .yellow)' is not a directory"
+        case .invalidPathExtension(let pathExtension, let outputType):
+            let start: FormattedText = "Invalid path extension '\(pathExtension, color: .yellow, style: .bold)'"
+            guard let outputType else {
+                return start
+            }
+            if let type = outputType.preferredFilenameExtension {
+                return start + " for expected output type '\(type, color: .cyan, style: .bold)'"
+            }
+            return start + " for unknown output type"
+        }
+    }
+
+    var fix: FormattedText? {
+        if case .invalidPathExtension(_, let outputType) = self {
+            if let type = outputType?.preferredFilenameExtension {
+                return "Use path extension '\(type, color: .green, style: .bold)'"
+            }
+        }
+        return nil
     }
 }
