@@ -5,7 +5,7 @@
 
 import Foundation
 
-/// Represents an iconset file.
+/// A representation of an iconset file.
 struct Iconset {
     /// The individual icons contained within the iconset.
     let icons: [Icon]
@@ -35,15 +35,15 @@ struct Iconset {
 }
 
 extension Iconset {
-    /// Sizing and scaling information used to create the various icons in an iconset.
+    /// Sizing and scaling information used to create the icons in an iconset.
     struct Dimension: CustomStringConvertible {
         /// The length of each side of the icon.
-        let length: Int
+        var length: Int
 
         /// The scaling factor of the icon.
-        let scale: Int
+        var scale: Int
 
-        /// A size calculated by multiplying `length` by `scale`.
+        /// A size calculated by multiplying the dimension's length by its scale.
         var size: CGSize {
             CGSize(width: length * scale, height: length * scale)
         }
@@ -59,12 +59,6 @@ extension Iconset {
             "\(length)x\(length)\(scaleDescription)"
         }
 
-        /// Creates an instance with the given length and scaling factor.
-        init(length: Int, scale: Int) {
-            self.length = length
-            self.scale = scale
-        }
-
         /// An array of all required sizes and scales for the icons in an iconset.
         static let all: [Self] = [16, 32, 128, 256, 512].reduce(into: []) { dimensions, length in
             dimensions.append(contentsOf: [
@@ -78,7 +72,8 @@ extension Iconset {
 extension Iconset {
     /// An individual icon in an iconset.
     struct Icon {
-        private enum IconValidationError: String, FormattedError {
+        /// An error that can occur during the validation of an icon.
+        enum ValidationError: String, FormattedError {
             case invalidDimensions = "Image width and height must be equal."
 
             var errorMessage: FormattedText {
@@ -87,21 +82,15 @@ extension Iconset {
         }
 
         /// The image used to create the icon.
-        let image: Image
+        var image: Image
 
         /// Sizing and scaling information used to draw the icon's image at the required size.
-        let dimension: Dimension
-
-        /// Creates an icon with the given image and dimension.
-        init(image: Image, dimension: Dimension) {
-            self.image = image
-            self.dimension = dimension
-        }
+        var dimension: Dimension
 
         /// Validates the dimensions of the icon, ensuring that the width and height are equal.
         func validateDimensions() throws {
             guard image.width == image.height else {
-                throw IconValidationError.invalidDimensions
+                throw ValidationError.invalidDimensions
             }
         }
 

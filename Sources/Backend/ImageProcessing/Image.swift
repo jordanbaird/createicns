@@ -192,21 +192,13 @@ extension Image {
     /// An image destination that writes an image to a url.
     struct URLDestination {
         /// The url to write the image to.
-        let url: URL
+        var url: URL
 
         /// The image to write.
-        let image: Image
+        var image: Image
 
         /// An identifier specifying the type of image data to write.
-        let type: FileType
-
-        /// Creates an image destination that writes the given image to the given
-        /// url, using the data type specified by the given type identifier.
-        init(url: URL, image: Image, type: FileType) {
-            self.url = url
-            self.image = image
-            self.type = type
-        }
+        var type: FileType
 
         /// Writes the image's data to the destination's url.
         func write() throws {
