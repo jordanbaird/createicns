@@ -63,7 +63,7 @@ struct ListFormats: Runner {
             .trimmingSuffix { $0.isWhitespace } // lazy hack (see above)
         }
 
-        // finally, join the lines into a single string.
+        // finally, join the lines into a single string
         return lines.joined(separator: "\n")
     }
 

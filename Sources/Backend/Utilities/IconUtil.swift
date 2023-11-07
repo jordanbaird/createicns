@@ -57,7 +57,7 @@ enum IconUtil {
                 }
             }()
 
-            // iconutil only returns data if something went wrong.
+            // iconutil only returns data if something went wrong
             if let data {
                 throw ContextualDataError(data, context: self)
             }

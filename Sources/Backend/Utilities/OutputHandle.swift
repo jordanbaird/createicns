@@ -109,7 +109,7 @@ extension OutputHandle: Hashable {
 extension OutputHandle: TextOutputStream {
     private func write<S: Sequence>(_ elements: S, to fileHandle: FileHandle) where S.Element == UInt8 {
         if #available(macOS 10.15.4, *) {
-            // we want to know about a failure here, so a force try is acceptable
+            // can't recover from failures here, so force try is acceptable
             // swiftlint:disable:next force_try
             try! fileHandle.write(contentsOf: Data(elements))
         } else {

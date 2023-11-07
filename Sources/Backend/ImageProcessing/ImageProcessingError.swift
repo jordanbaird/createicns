@@ -1,5 +1,5 @@
 //
-//  ProcessingError.swift
+//  ImageProcessingError.swift
 //  createicns
 //
 
