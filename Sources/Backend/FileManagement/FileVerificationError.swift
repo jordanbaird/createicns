@@ -11,32 +11,32 @@ enum FileVerificationError: FormattedError {
     case isNotDirectory(String)
     case invalidPathExtension(String, FileType?)
 
-    var errorMessage: FormattedText {
+    var errorMessage: String {
         switch self {
         case .alreadyExists(let path):
-            return "'\(path, color: .yellow)' already exists"
+            return "'\(path.formatted(color: .yellow))' already exists"
         case .doesNotExist(let path):
-            return "No such file or directory '\(path, color: .yellow)'"
+            return "No such file or directory '\(path.formatted(color: .yellow))'"
         case .isDirectory(let path):
-            return "'\(path, color: .yellow)' is a directory"
+            return "'\(path.formatted(color: .yellow))' is a directory"
         case .isNotDirectory(let path):
-            return "'\(path, color: .yellow)' is not a directory"
+            return "'\(path.formatted(color: .yellow))' is not a directory"
         case .invalidPathExtension(let pathExtension, let outputType):
-            let start: FormattedText = "Invalid path extension '\(pathExtension, color: .yellow, style: .bold)'"
+            let start = "Invalid path extension '\(pathExtension.formatted(color: .yellow, style: .bold))'"
             guard let outputType else {
                 return start
             }
             if let type = outputType.preferredFilenameExtension {
-                return start + " for expected output type '\(type, color: .cyan, style: .bold)'"
+                return start + " for expected output type '\(type.formatted(color: .cyan, style: .bold))'"
             }
             return start + " for unknown output type"
         }
     }
 
-    var fix: FormattedText? {
+    var fix: String? {
         if case .invalidPathExtension(_, let outputType) = self {
             if let type = outputType?.preferredFilenameExtension {
-                return "Use path extension '\(type, color: .green, style: .bold)'"
+                return "Use path extension '\(type.formatted(color: .green, style: .bold))'"
             }
         }
         return nil

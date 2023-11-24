@@ -28,13 +28,13 @@ struct Options: ParsableArguments {
         if isIconset {
             type = .iconset // set the type to simulate the behavior of "--iconset"
             print(
-                FormattedText("warning:", color: .yellow, style: .bold)
+                "warning:".formatted(color: .yellow, style: .bold)
                     .appending(" '")
-                    .appending("-s", color: .yellow)
+                    .appending("-s".formatted(color: .yellow))
                     .appending(", ")
-                    .appending("--iconset", color: .yellow)
+                    .appending("--iconset".formatted(color: .yellow))
                     .appending("' is deprecated: use '")
-                    .appending("--type", color: .cyan)
+                    .appending("--type".formatted(color: .cyan))
                     .appending("' instead.")
             )
         }

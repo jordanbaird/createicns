@@ -55,15 +55,9 @@ public struct MainRunner: Runner {
 
     func exit(with error: Error) -> Never {
         let box = FormattedErrorBox(error: error)
-        let errorText = FormattedText("error:", color: .red, style: .bold)
-            .appending(" ")
-            .appending(box.errorMessage)
-        print(errorText)
+        print("error:".formatted(color: .red, style: .bold) + " " + box.errorMessage)
         if let fix = box.fix {
-            let fixText = FormattedText("fix:", color: .green, style: .bold)
-                .appending(" ")
-                .appending(fix)
-            print(fixText)
+            print("fix:".formatted(color: .green, style: .bold) + " " + fix)
         }
         Darwin.exit(EXIT_FAILURE)
     }

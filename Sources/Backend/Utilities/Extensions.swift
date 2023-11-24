@@ -6,39 +6,51 @@
 // MARK: - CustomStringConvertible
 
 extension CustomStringConvertible {
-    /// Returns a formatted text instance that formats a textual representation of
-    /// this value using the given color and style.
+    /// Returns a textual representation of this value, formatted using
+    /// the given color and style.
     ///
     /// - Parameters:
-    ///   - color: The color to use in the resulting formatted text instance.
-    ///   - style: The style to use in the resulting formatted text instance.
+    ///   - color: The color to use in the resulting formatted text.
+    ///   - style: The style to use in the resulting formatted text.
     ///
-    /// - Returns: A formatted text instance that formats a textual representation 
-    ///   of this value using the given color and style.
-    func formatted(color: TextOutputColor, style: TextOutputStyle) -> FormattedText {
-        FormattedText(self, color: color, style: style)
+    /// - Returns: A textual representation of this value, formatted using
+    ///   the given color and style.
+    public func formatted(color: TextOutputColor, style: TextOutputStyle) -> String {
+        if OutputHandle.standardOutput.isTerminal && OutputHandle.standardError.isTerminal {
+            return style.onCode + color.onCode + String(describing: self) + color.offCode + style.offCode
+        } else {
+            return String(describing: self)
+        }
     }
 
-    /// Returns a formatted text instance that formats a textual representation of
-    /// this value using the given color.
+    /// Returns a textual representation of this value, formatted using
+    /// the given color.
     ///
-    /// - Parameter color: The color to use in the resulting formatted text instance.
+    /// - Parameter color: The color to use in the resulting formatted text.
     ///
-    /// - Returns: A formatted text instance that formats a textual representation 
-    ///   of this value using the given color.
-    func formatted(color: TextOutputColor) -> FormattedText {
-        FormattedText(self, color: color)
+    /// - Returns: A textual representation of this value, formatted using
+    ///   the given color.
+    public func formatted(color: TextOutputColor) -> String {
+        if OutputHandle.standardOutput.isTerminal && OutputHandle.standardError.isTerminal {
+            return color.onCode + String(describing: self) + color.offCode
+        } else {
+            return String(describing: self)
+        }
     }
 
-    /// Returns a formatted text instance that formats a textual representation of
-    /// this value using the given style.
+    /// Returns a textual representation of this value, formatted using
+    /// the given style.
     ///
-    /// - Parameter style: The style to use in the resulting formatted text instance.
+    /// - Parameter style: The style to use in the resulting formatted text.
     ///
-    /// - Returns: A formatted text instance that formats a textual representation 
-    ///   of this value using the given style.
-    func formatted(style: TextOutputStyle) -> FormattedText {
-        FormattedText(self, style: style)
+    /// - Returns: A textual representation of this value, formatted using
+    ///   the given style.
+    public func formatted(style: TextOutputStyle) -> String {
+        if OutputHandle.standardOutput.isTerminal && OutputHandle.standardError.isTerminal {
+            return style.onCode + String(describing: self) + style.offCode
+        } else {
+            return String(describing: self)
+        }
     }
 }
 

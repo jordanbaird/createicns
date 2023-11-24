@@ -11,21 +11,15 @@ import Foundation
 /// to a command line interface.
 public protocol FormattedError: Error, TextOutputStreamable {
     /// The formatted error message to display.
-    ///
-    /// If one of either standard output or standard error does not point to 
-    /// a terminal, the message is displayed without formatting.
-    var errorMessage: FormattedText { get }
+    var errorMessage: String { get }
 
     /// An optional formatted message to display that describes how the user
     /// can remedy this error.
-    ///
-    /// If one of either standard output or standard error does not point to
-    /// a terminal, the message is displayed without formatting.
-    var fix: FormattedText? { get }
+    var fix: String? { get }
 }
 
 extension FormattedError {
-    public var fix: FormattedText? { nil }
+    public var fix: String? { nil }
 }
 
 extension FormattedError {
@@ -40,14 +34,14 @@ extension FormattedError {
 struct FormattedErrorBox: FormattedError {
     let error: any Error
 
-    var errorMessage: FormattedText {
+    var errorMessage: String {
         if let error = error as? FormattedError {
             return error.errorMessage
         }
-        return FormattedText(contentsOf: error.localizedDescription)
+        return error.localizedDescription
     }
 
-    var fix: FormattedText? {
+    var fix: String? {
         if let error = error as? FormattedError {
             return error.fix
         }
@@ -66,12 +60,12 @@ struct ContextualDataError: FormattedError {
     /// A string describing the context in which this error occurred.
     let context: String
 
-    var errorMessage: FormattedText {
-        var message = FormattedText(context + ":", color: .yellow, style: .bold)
+    var errorMessage: String {
+        var message = "\(context):".formatted(color: .yellow, style: .bold) + " "
         if let string = String(data: data, encoding: .utf8) {
-            message.append(" \("An error occurred with the following data:", color: .red) \(string)")
+            message += "An error occurred with the following data:".formatted(color: .red) + " " + string
         } else {
-            message.append(" An unknown error occurred")
+            message += "An unknown error occurred"
         }
         return message
     }
