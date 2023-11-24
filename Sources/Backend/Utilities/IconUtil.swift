@@ -33,33 +33,23 @@ enum IconUtil {
             process.standardOutput = pipe
             process.standardError = pipe
             process.arguments = ["iconutil", "-c", "icns", iconsetURL.lastPathComponent]
+            process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+            process.currentDirectoryURL = tempURL
 
-            let envPath = "/usr/bin/env"
-
-            if #available(macOS 10.13, *) {
-                process.executableURL = URL(fileURLWithPath: envPath)
-                process.currentDirectoryURL = tempURL
-                try process.run()
-            } else {
-                process.launchPath = envPath
-                process.currentDirectoryPath = tempURL.path
-                process.launch()
-            }
+            try process.run()
             process.waitUntilExit()
 
-            let data: Data? = {
-                let fileHandle = pipe.fileHandleForReading
-                if #available(macOS 10.15.4, *) {
-                    return try? fileHandle.readToEnd()
-                } else {
-                    let data = fileHandle.readDataToEndOfFile()
-                    return data.isEmpty ? nil : data
-                }
-            }()
-
             // iconutil only returns data if something went wrong
-            if let data {
-                throw ContextualDataError(data, context: self)
+            let fileHandle = pipe.fileHandleForReading
+            if #available(macOS 10.15.4, *) {
+                if let data = try fileHandle.readToEnd() {
+                    throw ContextualDataError(data, context: self)
+                }
+            } else {
+                let data = fileHandle.readDataToEndOfFile()
+                if !data.isEmpty {
+                    throw ContextualDataError(data, context: self)
+                }
             }
 
             try FileManager.default.copyItem(at: iconURL, to: outputURL)
