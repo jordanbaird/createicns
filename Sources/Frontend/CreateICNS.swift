@@ -12,7 +12,7 @@ struct CreateICNS: ParsableCommand {
 
     static let configuration = CommandConfiguration(
         commandName: commandName,
-        abstract: "Create icns and iconset files from standard images.",
+        abstract: "Create 'icns' and 'iconset' files from standard images.",
         usage: "\(commandName) [<options>] <input> [<output>]",
         version: Version.current.versionString
     )
