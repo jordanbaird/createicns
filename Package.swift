@@ -5,7 +5,7 @@ import PackageDescription
 let package = Package(
     name: "createicns",
     platforms: [
-        .macOS(.v10_13),
+        .macOS(.v10_14),
     ],
     products: [
         .executable(name: "createicns", targets: ["Frontend"]),
